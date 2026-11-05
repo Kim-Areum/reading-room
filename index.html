@@ -324,6 +324,7 @@ const S = {
   readers: new Map(),
   sessions: new Map(),
   online: new Set(),
+  onlineRaw: new Set(),  // presence keys as the room reports them, registered or not
   roomOk: false,
   modal: null,            // {seconds, startedAt, endedAt, title, note, file, preview, err, saving}
   expanded: new Set(),   // 'uid|title' groups opened fully
@@ -462,6 +463,7 @@ async function boot() {
     clearTimeout(loadTimer);
     S.readers = new Map(list);
     for (const [id] of list) ensureSessionSub(id);
+    S.online = computeOnline();
     if (S.phase === 'loading') S.phase = S.readers.has(S.me) ? 'app' : 'setup';
     render();
   }, () => { clearTimeout(loadTimer); if (S.phase === 'loading') { S.phase = 'setup'; render(); } });
@@ -470,13 +472,19 @@ async function boot() {
     S.roomOk = true;
     const ch = sb.channel('rr-room', { config: { presence: { key: S.me } } });
     ch.on('presence', { event: 'sync' }, () => {
-      const next = new Set(Object.keys(ch.presenceState())); next.add(S.me);
-      S.online = next;
+      S.onlineRaw = new Set(Object.keys(ch.presenceState()));
+      S.online = computeOnline();
       if (S.phase === 'app' && S.tab === 'now') render();
     }).subscribe(status => { if (status === 'SUBSCRIBED') ch.track({ uid: S.me, at: Date.now() }); });
   }
   setInterval(tick, 1000);
   requestAnimationFrame(step);
+}
+function computeOnline() {
+  const next = new Set();
+  for (const id of S.onlineRaw) if (S.readers.has(id)) next.add(id);
+  if (S.readers.has(S.me)) next.add(S.me);
+  return next;
 }
 function ensureSessionSub(id) {
   if (sessionSubs.has(id)) return;
@@ -630,7 +638,7 @@ function render() {
   document.body.classList.toggle('scroll', !(S.phase === 'app' && S.tab === 'now'));
   app.innerHTML = `
     <header class="top">
-      <div class="brand">같이 읽는 방 ${S.phase === 'app' && S.roomOk ? `<small>${S.online.size}명 접속 중</small>` : ''}</div>
+      <div class="brand">같이 읽는 방 ${S.phase === 'app' && S.roomOk && S.online.size > 0 ? `<small>${S.online.size}명 접속 중</small>` : ''}</div>
       ${S.phase === 'app' ? `<div class="icons" role="tablist">
         <button class="iconbtn" role="tab" data-tab="now" aria-selected="${S.tab === 'now'}" title="지금" aria-label="지금">${ICON.now}</button>
         <button class="iconbtn" role="tab" data-tab="log" aria-selected="${S.tab === 'log'}" title="기록" aria-label="기록">${ICON.log}</button>
@@ -685,7 +693,6 @@ function visibleReaders() {
 }
 function renderRoom() {
   const list = visibleReaders();
-  const others = list.filter(([id]) => id !== S.me).length;
   const sprites = list.map(([id, r, here]) => {
     const mine = id === S.me;
     const st = r.status || 'idle';
@@ -704,9 +711,7 @@ function renderRoom() {
     </div>`;
   }).join('');
   const my = myReader();
-  const foot = others === 0
-    ? '아직 나 혼자예요. 링크를 친구에게 공유하면 여기서 같이 읽을 수 있어요.'
-    : (my?.status === 'idle' ? '머리 위 📕를 탭하면 읽기 시작, 📖를 한 번 더 탭하면 끝' : '');
+  const foot = my?.status === 'idle' ? '머리 위 📕를 탭하면 읽기 시작, 📖를 한 번 더 탭하면 끝' : '';
   return `<div class="room" id="room">${sprites}${foot ? `<div class="room-foot">${foot}</div>` : ''}</div>`;
 }
 function groupBooks(list) {
