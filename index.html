@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<script>window.APP_VERSION = "20261105235854";</script>
+<script>window.APP_VERSION = "20261106000017";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -822,7 +822,7 @@ function renderLog() {
     const mine = id === S.me;
     const open = S.expanded.has(id);
     let body = '';
-    if (!list.length) body = `<div class="none">아직 기록이 없어요</div>`;
+    if (!list.length) body = '';
     else if (!open) {
       body = bubble(list[0], mine, true) + (list.length > 1 ? `<div class="more"><button data-expand="${esc(id)}">더보기 (${list.length - 1})</button></div>` : '');
     } else {
