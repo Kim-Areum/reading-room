@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<script>window.APP_VERSION = "20261106000017";</script>
+<script>window.APP_VERSION = "20261106000056";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -832,7 +832,7 @@ function renderLog() {
     return `<article class="rec">
       <div class="av">${charSvg(r.animal)}</div>
       <div class="col">
-        <div class="who"><div class="n">${esc(r.nickname || '이름 없음')}${mine ? '<small>나</small>' : ''}</div><div class="tot">${total ? fmtDur(total) : '0분'}</div></div>
+        <div class="who"><div class="n">${esc(r.nickname || '이름 없음')}${mine ? '<small>나</small>' : ''}</div>${total ? `<div class="tot">${fmtDur(total)}</div>` : ''}</div>
         ${body}
       </div>
     </article>`;
