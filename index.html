@@ -115,6 +115,21 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .empty { text-align: center; color: var(--ink-soft); padding: 40px 12px; }
 .empty b { display: block; font-weight: 400; color: var(--ink); font-size: 22px; margin-bottom: 4px; }
 
+/* ----- chat ----- */
+.chat-fab { position: fixed; right: calc(16px + env(safe-area-inset-right, 0px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); width: 50px; height: 50px; border-radius: 999px; border: 0; background: var(--ink); color: var(--paper); display: inline-flex; align-items: center; justify-content: center; z-index: 8; box-shadow: 0 4px 14px rgba(0,0,0,.14); }
+.chat-fab svg { width: 24px; height: 24px; }
+.chat-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; display: flex; align-items: center; gap: 8px; background: var(--paper); border-top: 1px solid var(--line); padding: 8px max(12px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
+.chat-bar input { flex: 1; min-width: 0; background: var(--paper); border: 1.5px solid var(--line); border-radius: 999px; padding: 9px 14px; font-size: 18px; }
+.chat-bar .send { width: 40px; height: 40px; border-radius: 999px; border: 0; background: var(--accent); color: var(--accent-ink); display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.chat-bar .send svg { width: 20px; height: 20px; }
+.chat-bar .close { background: none; border: 0; color: var(--ink-soft); font-size: 16px; padding: 6px; }
+.chat-stack { position: absolute; top: 6px; right: max(12px, env(safe-area-inset-right, 0px)); max-width: min(72%, 320px); display: flex; flex-direction: column; align-items: flex-end; gap: 6px; z-index: 6; pointer-events: none; }
+.msg { background: var(--paper); border: 1.5px solid var(--ink); border-radius: 10px; padding: 5px 10px; font-size: 15px; line-height: 1.3; max-width: 100%; overflow-wrap: anywhere; animation: msgin .25s ease-out; }
+.msg b { font-weight: 400; color: var(--ink-soft); font-size: 13px; margin-right: 6px; }
+.msg.mine { border-color: var(--accent-deep); }
+@keyframes msgin { from { opacity: 0; transform: translateY(-6px) } to { opacity: 1; transform: none } }
+@media (prefers-reduced-motion: reduce) { .msg { animation: none; } }
+
 /* ----- records ----- */
 .log { padding-block: 8px 24px; display: flex; flex-direction: column; gap: 22px; }
 .rec { display: grid; grid-template-columns: 56px 1fr; column-gap: 10px; min-width: 0; }
@@ -313,6 +328,8 @@ const ANIMAL_NAME = Object.fromEntries(ANIMALS);
 const ICON = {
   now: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M10 20v-5h4v5"/></svg>',
   log: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 18v2.5"/><path d="M8 7h8M8 10.5h8"/></svg>',
+  chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+  send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h14M12 5l7 7-7 7"/></svg>',
   profile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>',
 };
 
@@ -331,9 +348,10 @@ const S = {
   confirmDel: null,      // session id awaiting delete confirmation
   setupAnimal: null,
   handoff: { open: false, code: '', err: '', busy: false },
+  chat: { open: false, msgs: [] },   // msgs: {id, uid, text, at}; ephemeral, broadcast only
   storeNote: '',
 };
-let store = null;
+let store = null, roomCh = null;
 const sessionSubs = new Map();
 const walkers = new Map();
 const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -470,7 +488,12 @@ async function boot() {
 
   if (sb) {
     S.roomOk = true;
-    const ch = sb.channel('rr-room', { config: { presence: { key: S.me } } });
+    const ch = sb.channel('rr-room', { config: { presence: { key: S.me }, broadcast: { self: true } } });
+    roomCh = ch;
+    ch.on('broadcast', { event: 'chat' }, ({ payload }) => {
+      if (!payload || typeof payload.text !== 'string' || typeof payload.uid !== 'string') return;
+      pushChat({ id: String(payload.id || Date.now()), uid: payload.uid, text: payload.text.slice(0, 120), at: Date.now() });
+    });
     ch.on('presence', { event: 'sync' }, () => {
       S.onlineRaw = new Set(Object.keys(ch.presenceState()));
       S.online = computeOnline();
@@ -562,6 +585,27 @@ function deleteSession(id) {
   });
 }
 
+const CHAT_TTL = 90000, CHAT_MAX = 6;
+function pushChat(m) {
+  S.chat.msgs = [...S.chat.msgs.filter(x => x.id !== m.id), m].slice(-CHAT_MAX);
+  if (S.phase === 'app' && S.tab === 'now') render();
+}
+function pruneChat() {
+  const now = Date.now();
+  const keep = S.chat.msgs.filter(m => now - m.at < CHAT_TTL);
+  if (keep.length !== S.chat.msgs.length) { S.chat.msgs = keep; if (S.phase === 'app' && S.tab === 'now') render(); }
+}
+async function sendChat() {
+  const inp = $('#chat-input'); const text = (inp?.value || '').trim().slice(0, 120);
+  if (!text) return;
+  const m = { id: S.me + '-' + Date.now(), uid: S.me, text };
+  if (inp) inp.value = '';
+  if (roomCh) {
+    try { await roomCh.send({ type: 'broadcast', event: 'chat', payload: m }); }
+    catch (e) { console.error(e); pushChat({ ...m, at: Date.now() }); }
+  } else pushChat({ ...m, at: Date.now() });
+  setTimeout(() => $('#chat-input')?.focus(), 30);
+}
 async function adoptCode() {
   const code = (S.handoff.code || '').trim().toLowerCase().replace(/^u_/, '');
   if (!code) { S.handoff.err = '코드를 넣어 주세요.'; render(); return; }
@@ -712,7 +756,13 @@ function renderRoom() {
   }).join('');
   const my = myReader();
   const foot = my?.status === 'idle' ? '머리 위 📕를 탭하면 읽기 시작, 📖를 한 번 더 탭하면 끝' : '';
-  return `<div class="room" id="room">${sprites}${foot ? `<div class="room-foot">${foot}</div>` : ''}</div>`;
+  const stack = S.chat.msgs.length ? `<div class="chat-stack" aria-live="polite">${S.chat.msgs.map(m => {
+    const who = S.readers.get(m.uid)?.nickname || '누군가';
+    return `<div class="msg ${m.uid === S.me ? 'mine' : ''}"><b>${esc(who)}</b><span>${esc(m.text)}</span></div>`; }).join('')}</div>` : '';
+  const chat = S.chat.open
+    ? `<form class="chat-bar" id="chat-form"><input id="chat-input" maxlength="120" placeholder="메시지 보내기" autocomplete="off" enterkeyhint="send"><button type="submit" class="send" aria-label="보내기">${ICON.send}</button><button type="button" class="close" id="chat-close" aria-label="닫기">✕</button></form>`
+    : `<button type="button" class="chat-fab" id="chat-open" aria-label="메시지 보내기">${ICON.chat}</button>`;
+  return `<div class="room" id="room">${sprites}${stack}${foot && !S.chat.open ? `<div class="room-foot">${foot}</div>` : ''}</div>${chat}`;
 }
 function groupBooks(list) {
   const groups = new Map();
@@ -804,6 +854,9 @@ function bind() {
   $('#handoff-code')?.addEventListener('input', e => { S.handoff.code = e.target.value; });
   $('#handoff-code')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); adoptCode(); } });
   $('#handoff-go')?.addEventListener('click', adoptCode);
+  $('#chat-open')?.addEventListener('click', () => { S.chat.open = true; render(); setTimeout(() => $('#chat-input')?.focus(), 30); });
+  $('#chat-close')?.addEventListener('click', () => { S.chat.open = false; render(); });
+  $('#chat-form')?.addEventListener('submit', e => { e.preventDefault(); sendChat(); });
   $('#edit-profile')?.addEventListener('click', () => { S.setupAnimal = myReader()?.animal || null; S.phase = 'setup'; render(); });
   app.querySelectorAll('[data-tab]').forEach(t => t.addEventListener('click', () => { S.tab = t.dataset.tab; try { localStorage.setItem('rr.tab', S.tab); } catch (e) {} render(); }));
   app.querySelectorAll('[data-book="1"]').forEach(b => b.addEventListener('click', () => {
@@ -825,6 +878,7 @@ function bind() {
   if (room) room.querySelectorAll('.sprite').forEach(el => { const w = walkerFor(el.dataset.uid, room); el.style.transform = `translate(${w.x}px, ${w.y}px)`; el.style.setProperty('--face', w.face); });
 }
 function tick() {
+  pruneChat();
   if (S.phase !== 'app' || S.tab !== 'now') return;
   const now = Date.now();
   document.querySelectorAll('[data-timer]').forEach(el => {
