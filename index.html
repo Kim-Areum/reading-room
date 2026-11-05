@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>같이 읽는 방</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap">
+<style>
+/* Layout: a white room that fills the screen; black line-art characters wander in it. One deliberate light look (white paper, black ink), set in the Haru app's handwriting face. */
+@font-face { font-family: 'Ownglyph'; src: url('fonts/Ownglyph_PDH.ttf') format('truetype'); font-weight: 400; font-display: swap; }
+:root {
+  --paper: #ffffff;
+  --ink: #111111;
+  --ink-soft: #8d8d89;
+  --line: #e4e3df;
+  --accent: #c4b6f5;       /* 연보라: 버튼 채움 */
+  --accent-ink: #2a2150;   /* 채움 위 글자 */
+  --accent-deep: #8b78d9;  /* 선·글자용 보라 */
+  --hand: 'Ownglyph', 'Gowun Dodum', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--hand); font-size: 18px; line-height: 1.45; -webkit-font-smoothing: antialiased; overflow: hidden; }
+body.scroll { overflow: auto; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, .animal-pick:focus-visible { outline: 2px solid var(--accent-deep); outline-offset: 2px; }
+
+.app { height: 100%; display: flex; flex-direction: column;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0; }
+body.scroll .app { height: auto; min-height: 100%; padding-block: 0 32px; }
+
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--paper); display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-block: 12px 6px; }
+.brand { font-size: 24px; display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.brand small { font-size: 14px; color: var(--ink-soft); white-space: nowrap; }
+.icons { display: flex; align-items: center; gap: 6px; }
+.iconbtn { background: none; border: 1.5px solid transparent; border-radius: 999px; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; color: var(--ink); padding: 0; }
+.iconbtn:hover { border-color: var(--line); }
+.iconbtn[aria-selected="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.iconbtn.profile { color: var(--ink-soft); margin-left: 4px; }
+.iconbtn svg { width: 18px; height: 18px; }
+
+.notice { font-size: 15px; color: var(--ink-soft); border: 1px dashed var(--line); border-radius: 10px; padding: 8px 12px; margin-block: 6px 4px; }
+
+/* ----- setup ----- */
+.setup { padding-block: 12px; }
+.setup h1 { font-weight: 400; font-size: 30px; margin: 8px 0 2px; text-wrap: balance; }
+.setup p.lead { color: var(--ink-soft); margin: 0 0 20px; }
+.animal-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+.animal-pick { background: var(--paper); border: 1.5px solid var(--line); border-radius: 16px; padding: 10px 6px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--ink); }
+.animal-pick svg { width: 64px; height: 70px; }
+.animal-pick span { font-size: 15px; color: var(--ink-soft); }
+.animal-pick[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 1.5px var(--ink) inset; }
+.field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+.field label { font-size: 15px; color: var(--ink-soft); }
+.field label i { font-style: normal; color: var(--accent-deep); }
+.field input, .field textarea { background: var(--paper); border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 12px; width: 100%; font-size: 19px; }
+.field textarea { resize: vertical; min-height: 70px; }
+.btn { border: 0; border-radius: 12px; padding: 12px 18px; font-size: 19px; background: var(--ink); color: var(--paper); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: transparent; color: var(--ink-soft); border: 1.5px solid var(--line); }
+.btn:disabled { opacity: 0.35; cursor: default; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn-row .btn { flex: 1 1 auto; }
+
+/* ----- the room ----- */
+.room { position: relative; flex: 1; min-height: 360px; overflow: hidden; margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); }
+.room-foot { position: absolute; left: 0; right: 0; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 15px; color: var(--ink-soft); pointer-events: none; padding: 0 24px; }
+.sprite { position: absolute; left: 0; top: 0; width: 110px; display: flex; flex-direction: column; align-items: center; will-change: transform; --face: 1; --bob: 0px; }
+.sprite.away { opacity: 0.4; }
+.sprite .book { background: none; border: 0; font-size: 24px; line-height: 1; padding: 6px 14px; border-radius: 999px; filter: grayscale(1); opacity: 0.3; transition: filter .2s, opacity .2s; transform: translateY(var(--bob)); }
+.sprite .book.on { filter: none; opacity: 1; }
+.sprite .book.mine { cursor: pointer; }
+.sprite .book.mine:hover { opacity: 0.75; }
+.sprite .book.on.mine:hover { opacity: 1; }
+.sprite .book:not(.mine) { cursor: default; }
+.sprite .body { width: 78px; height: 86px; transform: translateY(var(--bob)) scaleX(var(--face)); transform-origin: 50% 100%; }
+.sprite .body svg { width: 100%; height: 100%; display: block; }
+.sprite.reading .body { animation: sway 3.2s ease-in-out infinite; }
+.sprite.reading .book { animation: readbook 1.6s ease-in-out infinite; }
+.sprite.reading .dots { position: absolute; top: 0; left: 50%; margin-left: 24px; font-size: 13px; color: var(--ink-soft); animation: drift 2.4s ease-in-out infinite; letter-spacing: 2px; }
+@keyframes sway { 0%,100% { transform: rotate(-2.5deg) scaleX(var(--face)) } 50% { transform: rotate(2.5deg) scaleX(var(--face)) } }
+@keyframes readbook { 0%,100% { transform: translateY(0) rotate(-6deg) } 50% { transform: translateY(-4px) rotate(6deg) } }
+@keyframes drift { 0% { opacity: 0; transform: translateY(6px) } 30% { opacity: 1 } 100% { opacity: 0; transform: translateY(-10px) } }
+.sprite .name { font-size: 17px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; line-height: 1.2; }
+.sprite .name .me { font-size: 12px; color: var(--ink-soft); margin-left: 3px; }
+.sprite .timer { font-size: 17px; letter-spacing: 0.04em; min-height: 22px; line-height: 22px; font-variant-numeric: tabular-nums; }
+.sprite .timer.paused { color: var(--ink-soft); }
+.sprite .timer.idle { visibility: hidden; }
+.sprite .ctrl { display: flex; gap: 5px; margin-top: 3px; }
+.sprite .ctrl button { border: 1px solid var(--ink); background: var(--paper); border-radius: 999px; font-size: 14px; padding: 2px 10px; color: var(--ink); line-height: 1.4; }
+.sprite .ctrl button.stop { border-color: var(--accent-deep); color: var(--accent-deep); }
+.sprite .zz { position: absolute; top: 2px; right: 12px; font-size: 12px; color: var(--ink-soft); letter-spacing: 0.08em; }
+.empty { text-align: center; color: var(--ink-soft); padding: 40px 12px; }
+.empty b { display: block; font-weight: 400; color: var(--ink); font-size: 22px; margin-bottom: 4px; }
+
+/* ----- records ----- */
+.log { padding-block: 8px 24px; display: flex; flex-direction: column; gap: 22px; }
+.rec { display: grid; grid-template-columns: 56px 1fr; column-gap: 10px; min-width: 0; }
+.rec .av { width: 56px; height: 60px; }
+.rec .av svg { width: 100%; height: 100%; display: block; }
+.rec .who { display: flex; align-items: baseline; gap: 8px; min-width: 0; margin-bottom: 6px; }
+.rec .who .n { font-size: 20px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rec .who .n small { font-size: 12px; color: var(--ink-soft); margin-left: 3px; }
+.rec .who .tot { font-size: 14px; color: var(--ink-soft); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rec .col { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.rec .none { font-size: 14px; color: var(--ink-soft); padding-top: 4px; }
+.bub { position: relative; border: 1.5px solid var(--ink); border-radius: 16px; padding: 9px 12px 9px; min-width: 0; background: var(--paper); }
+.bub::before { content: ""; position: absolute; left: -9px; top: 16px; width: 12px; height: 12px; background: var(--paper); border-left: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); transform: rotate(45deg); }
+.bub .top { display: flex; align-items: baseline; gap: 8px; }
+.bub .top .t { font-size: 18px; line-height: 1.25; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.bub .top .t.un { color: var(--ink-soft); }
+.bub .top .t.un { color: var(--ink-soft); }
+.bub .blank { font-size: 14px; color: var(--ink-soft); }
+.bub .note { font-size: 16.5px; line-height: 1.35; overflow-wrap: anywhere; margin-top: 2px; }
+.cluster { display: flex; flex-direction: column; gap: 3px; }
+.cluster .bub:not(:first-child)::before { display: none; }
+.cluster .bub:first-child:not(:last-child) { border-radius: 16px 16px 14px 6px; }
+.cluster .bub:not(:first-child):not(:last-child) { border-radius: 6px 14px 14px 6px; }
+.cluster .bub:last-child:not(:first-child) { border-radius: 6px 14px 16px 16px; }
+.bub .x { position: absolute; top: 6px; right: 8px; background: none; border: 0; color: var(--ink-soft); font-size: 16px; line-height: 1; padding: 2px 4px; }
+.bub .x:hover { color: var(--accent-deep); }
+.bub.mine .top { padding-right: 18px; }
+.bub .cf { margin-top: 6px; font-size: 13px; color: var(--ink-soft); display: flex; gap: 6px; align-items: center; }
+.bub .cf button { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; font-size: 13px; padding: 1px 9px; color: var(--ink); line-height: 1.4; }
+.bub .cf button.yes { border-color: var(--accent-deep); color: var(--accent-deep); }
+.more { align-self: flex-start; }
+.more button { background: none; border: 0; color: var(--ink-soft); font-size: 14px; text-decoration: underline; padding: 0 2px; }
+
+/* ----- finish sheet ----- */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: flex-end; justify-content: center; z-index: 20; padding: 0 max(12px, env(safe-area-inset-left, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-right, 0px)); }
+.sheet { background: var(--paper); border-radius: 20px; padding: 20px 18px; width: 100%; max-width: 520px; max-height: calc(100% - 24px); overflow: auto; }
+.sheet h3 { font-weight: 400; font-size: 26px; margin: 0 0 2px; line-height: 1.2; }
+.sheet .sum { color: var(--ink-soft); font-size: 16px; margin-bottom: 14px; }
+.sheet .sum b { font-weight: 400; color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.chip { border: 1.5px solid var(--line); background: var(--paper); border-radius: 999px; padding: 3px 11px; font-size: 15px; color: var(--ink); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip.on { border-color: var(--accent-deep); background: var(--accent); color: var(--accent-ink); }
+.sheet .again { text-align: center; margin-top: 10px; }
+.sheet .again button { background: none; border: 0; color: var(--ink-soft); font-size: 15px; text-decoration: underline; }
+.sheet .err { color: var(--accent-deep); font-size: 15px; margin-bottom: 8px; }
+
+@media (prefers-reduced-motion: reduce) { .sprite.reading .body, .sprite.reading .book, .sprite.reading .dots { animation: none; } }
+</style>
+
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<!-- 캐릭터 8종: 전신 라인 드로잉 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- 공통: 굵기 3.4, 둥근 끝, 콩 모양 몸통. 표정은 동물마다 다르게 -->
+    <symbol id="c-bear" viewBox="0 0 100 110"><!-- 곰: 기분 좋게 감은 눈 -->
+      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="31" cy="25" r="8"/><circle cx="69" cy="25" r="8"/>
+        <path d="M25 42 a25 25 0 0 1 50 0 v34 a25 25 0 0 1 -50 0 z"/>
+        <path d="M25 66 q-7 4 -4 13" fill="none"/><path d="M75 66 q7 4 4 13" fill="none"/>
+        <ellipse cx="39" cy="100" rx="8" ry="3.6"/><ellipse cx="61" cy="100" rx="8" ry="3.6"/>
+      </g>
+      <path d="M37 44 q4 -5 8 0 M55 44 q4 -5 8 0 M46 55 q4 3 8 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <ellipse cx="50" cy="50" rx="3.4" ry="2.4" fill="currentColor"/>
+    </symbol>
+    <symbol id="c-penguin" viewBox="0 0 100 110"><!-- 펭귄: 또렷한 점 눈 -->
+      <ellipse cx="50" cy="104" rx="14" ry="2" fill="currentColor"/>
+      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M24 64 c0 -34 10 -46 26 -46 s26 12 26 46 c0 20 -12 30 -26 30 s-26 -10 -26 -30 z"/>
+        <path d="M24 56 q-10 12 -3 26" fill="none"/><path d="M76 56 q10 12 3 26" fill="none"/>
+        <ellipse cx="40" cy="98" rx="8" ry="3.4"/><ellipse cx="60" cy="98" rx="8" ry="3.4"/>
+      </g>
+      <g fill="currentColor"><circle cx="42" cy="44" r="2.4"/><circle cx="58" cy="44" r="2.4"/><path d="M45 51 l5 5 l5 -5 z"/></g>
+    </symbol>
+    <symbol id="c-dino" viewBox="0 0 100 110"><!-- 공룡: 신나서 벌린 입 -->
+      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M70 70 q16 -2 24 -16 q-4 18 -20 26" />
+        <path d="M26 44 a24 24 0 0 1 48 0 v32 a24 24 0 0 1 -48 0 z"/>
+        <path d="M38 21 q4 -8 8 -1 q4 -8 8 -1 q4 -8 8 0" fill="none"/>
+        <path d="M26 66 q-7 4 -4 12" fill="none"/><path d="M74 66 q7 4 4 12" fill="none"/>
+        <ellipse cx="40" cy="100" rx="8" ry="3.6"/><ellipse cx="60" cy="100" rx="8" ry="3.6"/>
+      </g>
+      <g fill="currentColor"><circle cx="40" cy="42" r="2.4"/><circle cx="58" cy="42" r="2.4"/><ellipse cx="49" cy="54" rx="3.6" ry="4.6"/></g>
+    </symbol>
+    <symbol id="c-pig" viewBox="0 0 100 110"><!-- 돼지: 윙크 -->
+      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M82 60 q7 -6 2 -11 q-4 -3 -5 2" fill="none"/>
+        <path d="M31 40 q-6 -10 -2 -15 q6 2 13 8 z"/><path d="M69 40 q6 -10 2 -15 q-6 2 -13 8 z"/>
+        <ellipse cx="50" cy="62" rx="31" ry="28"/>
+        <ellipse cx="50" cy="64" rx="9" ry="6.5"/>
+        <ellipse cx="38" cy="92" rx="8" ry="3.6"/><ellipse cx="62" cy="92" rx="8" ry="3.6"/>
+      </g>
+      <g fill="currentColor"><circle cx="37" cy="52" r="2.4"/><circle cx="46.5" cy="64" r="1.5"/><circle cx="53.5" cy="64" r="1.5"/></g>
+      <path d="M59 52 q4 -5 8 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="c-hedgehog" viewBox="0 0 100 110"><!-- 고슴도치: 실눈 웃음 -->
+      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M24 64 L22 50 L32 54 L34 40 L44 48 L50 34 L58 46 L68 38 L70 52 L82 48 L80 62 L88 66 L80 72 L84 84 Q66 94 50 92 Q34 92 24 84 Z"/>
+        <ellipse cx="50" cy="70" rx="26" ry="20"/>
+        <path d="M24 70 q-9 0 -13 6 q5 5 13 4" />
+        <ellipse cx="40" cy="92" rx="8" ry="3.4"/><ellipse cx="62" cy="92" rx="8" ry="3.4"/>
+      </g>
+      <circle cx="11" cy="76" r="2" fill="currentColor"/>
+      <path d="M30 66 l5 2.5 l-5 2.5 M50 66 l-5 2.5 l5 2.5 M36 76 q4 3 8 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="c-elephant" viewBox="0 0 100 110"><!-- 코끼리: 차분히 내리깐 눈 -->
+      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="24" cy="54" r="12"/><circle cx="76" cy="54" r="12"/>
+        <ellipse cx="50" cy="60" rx="29" ry="28"/>
+        <ellipse cx="39" cy="90" rx="8" ry="3.6"/><ellipse cx="61" cy="90" rx="8" ry="3.6"/>
+      </g>
+      <path d="M50 64 q0 12 -6 18 q-4 4 -1 7" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+      <path d="M50 64 q0 12 -6 18 q-4 4 -1 7" fill="none" stroke="var(--paper)" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M36 53 q4 5 8 0 M56 53 q4 5 8 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="c-cow" viewBox="0 0 100 110"><!-- 소: 진지한 눈썹 -->
+      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M36 22 q-6 -8 0 -13" fill="none"/><path d="M64 22 q6 -8 0 -13" fill="none"/>
+        <ellipse cx="27" cy="36" rx="8" ry="4.5"/><ellipse cx="73" cy="36" rx="8" ry="4.5"/>
+        <path d="M25 42 a25 25 0 0 1 50 0 v34 a25 25 0 0 1 -50 0 z"/>
+        <ellipse cx="50" cy="50" rx="11" ry="6.5"/>
+        <ellipse cx="39" cy="100" rx="8" ry="3.6"/><ellipse cx="61" cy="100" rx="8" ry="3.6"/>
+      </g>
+      <g fill="currentColor"><circle cx="41" cy="39" r="2.4"/><circle cx="59" cy="39" r="2.4"/><circle cx="46" cy="50" r="1.5"/><circle cx="54" cy="50" r="1.5"/>
+        <path d="M30 66 q6 -6 12 0 q-2 8 -10 7 q-4 -3 -2 -7 z"/><path d="M60 76 q6 -4 9 2 q-1 6 -8 5 q-3 -3 -1 -7 z"/></g>
+      <path d="M37 33 l7 -2 M63 33 l-7 -2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="c-rabbit" viewBox="0 0 100 110"><!-- 토끼: 동그랗게 놀란 눈 -->
+      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+        <ellipse cx="41" cy="19" rx="6.5" ry="15"/><ellipse cx="59" cy="19" rx="6.5" ry="15"/>
+        <path d="M26 50 a24 24 0 0 1 48 0 v28 a24 24 0 0 1 -48 0 z"/>
+        <path d="M26 70 q-6 4 -3 12" fill="none"/><path d="M74 70 q6 4 3 12" fill="none"/>
+        <ellipse cx="40" cy="100" rx="8" ry="3.6"/><ellipse cx="60" cy="100" rx="8" ry="3.6"/>
+      </g>
+      <circle cx="42" cy="47" r="3.2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="58" cy="47" r="3.2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M47 55 l3 2.5 l3 -2.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="50" cy="62" r="1.9" fill="currentColor"/>
+    </symbol>
+    <symbol id="c-cat" viewBox="0 0 100 110"><!-- 고양이: 감은 눈 + ω 입 -->
+      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M30 34 l1 -17 l15 11" /><path d="M70 34 l-1 -17 l-15 11" />
+        <path d="M74 84 q14 -2 13 -17" fill="none"/>
+        <path d="M26 46 a24 24 0 0 1 48 0 v30 a24 24 0 0 1 -48 0 z"/>
+        <path d="M26 68 q-6 4 -3 12" fill="none"/><path d="M74 68 q6 4 3 12" fill="none"/>
+        <ellipse cx="40" cy="100" rx="8" ry="3.6"/><ellipse cx="60" cy="100" rx="8" ry="3.6"/>
+      </g>
+      <path d="M36 46 q4 -5 8 0 M56 46 q4 -5 8 0 M44 53 q3 4 6 0 q3 4 6 0 M20 50 h-7 M20 56 h-7 M80 50 h7 M80 56 h7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="c-duck" viewBox="0 0 100 110"><!-- 오리: 납작 부리, 멀뚱한 눈 -->
+      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M46 32 q3 -9 9 -3" fill="none"/>
+        <path d="M26 56 a24 24 0 0 1 48 0 v22 a24 24 0 0 1 -48 0 z"/>
+        <path d="M26 70 q-9 6 -4 14" fill="none"/><path d="M74 70 q9 6 4 14" fill="none"/>
+        <ellipse cx="50" cy="60" rx="11" ry="4.5"/>
+        <ellipse cx="40" cy="102" rx="9" ry="3.4"/><ellipse cx="60" cy="102" rx="9" ry="3.4"/>
+      </g>
+      <g fill="currentColor"><circle cx="40" cy="49" r="2.4"/><circle cx="60" cy="49" r="2.4"/></g>
+    </symbol>
+    <symbol id="c-frog" viewBox="0 0 100 110"><!-- 개구리: 머리 위 왕눈이 + 활짝 웃음 -->
+      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="36" cy="44" r="10"/><circle cx="64" cy="44" r="10"/>
+        <ellipse cx="50" cy="70" rx="30" ry="25"/>
+        <ellipse cx="34" cy="94" rx="10" ry="3.8"/><ellipse cx="66" cy="94" rx="10" ry="3.8"/>
+      </g>
+      <g fill="currentColor"><circle cx="37" cy="45" r="2.6"/><circle cx="63" cy="45" r="2.6"/></g>
+      <path d="M34 70 q16 12 32 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="26" cy="74" r="1.6" fill="currentColor"/><circle cx="74" cy="74" r="1.6" fill="currentColor"/>
+    </symbol>
+    <symbol id="c-sheep" viewBox="0 0 100 110"><!-- 양: 구름 몸, 졸린 눈 -->
+      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="32" cy="50" r="12"/><circle cx="50" cy="42" r="13"/><circle cx="68" cy="50" r="12"/>
+        <circle cx="76" cy="70" r="12"/><circle cx="64" cy="86" r="12"/><circle cx="40" cy="86" r="12"/><circle cx="24" cy="70" r="12"/>
+        <circle cx="50" cy="66" r="24" stroke="none"/>
+        <ellipse cx="36" cy="62" rx="6" ry="3.4"/><ellipse cx="64" cy="62" rx="6" ry="3.4"/>
+        <ellipse cx="50" cy="64" rx="13" ry="15"/>
+        <ellipse cx="40" cy="100" rx="8" ry="3.4"/><ellipse cx="60" cy="100" rx="8" ry="3.4"/>
+      </g>
+      <path d="M44 62 h4 M52 62 h4 M47 71 q3 2 6 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script>
+(() => {
+'use strict';
+const ANIMALS = [
+  ['bear','곰'], ['penguin','펭귄'], ['dino','공룡'], ['pig','돼지'],
+  ['hedgehog','고슴도치'], ['elephant','코끼리'], ['cow','소'], ['rabbit','토끼'],
+  ['cat','고양이'], ['duck','오리'], ['frog','개구리'], ['sheep','양']
+];
+const ANIMAL_NAME = Object.fromEntries(ANIMALS);
+const ICON = {
+  now: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M10 20v-5h4v5"/></svg>',
+  log: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 18v2.5"/><path d="M8 7h8M8 10.5h8"/></svg>',
+  profile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>',
+};
+
+// ---------- state ----------
+const S = {
+  phase: 'loading',
+  tab: 'now',
+  me: null,
+  readers: new Map(),
+  sessions: new Map(),
+  online: new Set(),
+  roomOk: false,
+  modal: null,            // {seconds, startedAt, endedAt, title, note, file, preview, err, saving}
+  expanded: new Set(),   // 'uid|title' groups opened fully
+  confirmDel: null,      // session id awaiting delete confirmation
+  setupAnimal: null,
+  storeNote: '',
+};
+let store = null;
+const sessionSubs = new Map();
+const walkers = new Map();
+const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SPRITE_W = 110, SPRITE_H = 170;
+
+try { S.tab = localStorage.getItem('rr.tab') === 'log' ? 'log' : 'now'; } catch (e) {}
+
+// ---------- helpers ----------
+const $ = (sel, root = document) => root.querySelector(sel);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+function fmtClock(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  return h ? `${h}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`;
+}
+function fmtDur(sec) {
+  const h = Math.floor(sec / 3600), m = Math.round((sec % 3600) / 60);
+  if (h) return `${h}시간 ${m}분`;
+  if (m) return `${m}분`;
+  return `${sec}초`;
+}
+const DAYS = ['일','월','화','수','목','금','토'];
+function fmtWhen(ts) {
+  const d = new Date(ts);
+  return `${d.getMonth()+1}.${pad(d.getDate())} (${DAYS[d.getDay()]}) ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function elapsedOf(r, now = Date.now()) {
+  if (!r) return 0;
+  const acc = r.accum || 0;
+  return r.status === 'reading' ? acc + (now - (r.startedAt || now)) : acc;
+}
+function charSvg(animal) {
+  const id = ANIMAL_NAME[animal] ? animal : 'bear';
+  return `<svg viewBox="0 0 100 110" role="img" aria-label="${ANIMAL_NAME[id]}"><use href="#c-${id}"/></svg>`;
+}
+function hash(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; }
+// ---------- stores ----------
+function makeSupabaseStore(sb, uid) {
+  const readerCbs = [], sessCbs = new Map();
+  let readersCache = [], sessionsCache = [];
+  const rowToReader = r => ({ animal: r.animal, nickname: r.nickname, status: r.status, startedAt: r.started_at, accum: r.accum, sessionStartedAt: r.session_started_at, updatedAt: r.updated_at });
+  async function loadReaders() {
+    const { data, error } = await sb.from('rr_readers').select('*');
+    if (error) { console.error(error); return; }
+    readersCache = data.map(r => [r.id, rowToReader(r)]);
+    readerCbs.forEach(cb => cb(readersCache));
+  }
+  async function loadSessions() {
+    const { data, error } = await sb.from('rr_sessions').select('*').order('ended_at', { ascending: false }).limit(2000);
+    if (error) { console.error(error); return; }
+    sessionsCache = data.map(r => ({ id: r.id, readerId: r.reader_id, startedAt: r.started_at, endedAt: r.ended_at, seconds: r.seconds, title: r.title || '', note: r.note || '' }));
+    for (const [id, cb] of sessCbs) cb(sessionsCache.filter(x => x.readerId === id));
+  }
+  // live updates: realtime when enabled on the tables, plus a slow poll as a fallback
+  sb.channel('rr-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'rr_readers' }, () => loadReaders())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'rr_sessions' }, () => loadSessions())
+    .subscribe();
+  setInterval(() => { loadReaders(); loadSessions(); }, 20000);
+  return {
+    kind: 'supabase',
+    subscribeReaders(cb) { readerCbs.push(cb); loadReaders(); return () => {}; },
+    subscribeSessions(id, cb) { sessCbs.set(id, cb); cb(sessionsCache.filter(x => x.readerId === id)); if (sessCbs.size === 1) loadSessions(); return () => sessCbs.delete(id); },
+    async setReader(d) {
+      const { error } = await sb.from('rr_readers').upsert({ id: uid, animal: d.animal, nickname: d.nickname, status: d.status, started_at: d.startedAt, accum: d.accum, session_started_at: d.sessionStartedAt, updated_at: d.updatedAt });
+      if (error) throw error; await loadReaders();
+    },
+    async updateReader(p) {
+      const row = {};
+      if ('status' in p) row.status = p.status; if ('startedAt' in p) row.started_at = p.startedAt; if ('accum' in p) row.accum = p.accum;
+      if ('sessionStartedAt' in p) row.session_started_at = p.sessionStartedAt; if ('updatedAt' in p) row.updated_at = p.updatedAt;
+      const { error } = await sb.from('rr_readers').update(row).eq('id', uid);
+      if (error) throw error; await loadReaders();
+    },
+    async addSession(d) {
+      const { error } = await sb.from('rr_sessions').insert({ reader_id: uid, started_at: d.startedAt, ended_at: d.endedAt, seconds: d.seconds, title: d.title, note: d.note });
+      if (error) throw error; await loadSessions();
+    },
+    async deleteSession(id) {
+      const { error } = await sb.from('rr_sessions').delete().eq('id', id).eq('reader_id', uid);
+      if (error) throw error;
+      await loadSessions();
+    },
+  };
+}
+function makeLocalStore() {
+  const KEY = 'rr.local';
+  let data = { reader: null, sessions: [] };
+  try { const raw = localStorage.getItem(KEY); if (raw) data = JSON.parse(raw); } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} };
+  let readerCb = null, sessCb = null;
+  const pushR = () => readerCb && readerCb(data.reader ? [['local', data.reader]] : []);
+  const pushS = () => sessCb && sessCb([...data.sessions].sort((a, b) => b.endedAt - a.endedAt));
+  return {
+    kind: 'local',
+    subscribeReaders(cb) { readerCb = cb; setTimeout(pushR, 0); return () => { readerCb = null; }; },
+    subscribeSessions(id, cb) { sessCb = cb; setTimeout(pushS, 0); return () => { sessCb = null; }; },
+    async setReader(d) { data.reader = d; save(); pushR(); },
+    async updateReader(p) { data.reader = { ...(data.reader || {}), ...p }; save(); pushR(); },
+    async addSession(s) { data.sessions.push({ id: String(Date.now()), ...s }); save(); pushS(); },
+    async deleteSession(id) { data.sessions = data.sessions.filter(x => x.id !== id); save(); pushS(); },
+  };
+}
+
+// ---------- boot ----------
+async function boot() {
+  render();
+  const cfg = window.RR_CONFIG || {};
+  let sb = null, uid = null;
+  if (cfg.url && cfg.anonKey && window.supabase) {
+    try { sb = window.supabase.createClient(cfg.url, cfg.anonKey); } catch (e) { console.error(e); }
+  }
+  if (sb) {
+    try { uid = localStorage.getItem('rr.uid'); if (!uid) { uid = 'u_' + crypto.randomUUID().replace(/-/g, '').slice(0, 20); localStorage.setItem('rr.uid', uid); } } catch (e) { uid = 'u_' + Math.random().toString(36).slice(2, 12); }
+    S.me = uid;
+    store = makeSupabaseStore(sb, uid);
+  } else {
+    S.me = 'local';
+    store = makeLocalStore();
+    S.storeNote = cfg.url ? '서버 스크립트를 불러오지 못해 이 기기에만 저장하는 혼자 모드예요.' : '혼자 모드예요. config.js에 Supabase 주소와 키를 넣으면 친구와 같이 쓸 수 있어요.';
+  }
+
+  const loadTimer = setTimeout(() => { if (S.phase === 'loading') { S.phase = 'setup'; S.storeNote = '아직 서버와 연결되지 않았어요. 잠시 후 다시 열어주세요.'; render(); } }, 10000);
+  store.subscribeReaders(list => {
+    clearTimeout(loadTimer);
+    S.readers = new Map(list);
+    for (const [id] of list) ensureSessionSub(id);
+    if (S.phase === 'loading') S.phase = S.readers.has(S.me) ? 'app' : 'setup';
+    render();
+  }, () => { clearTimeout(loadTimer); if (S.phase === 'loading') { S.phase = 'setup'; render(); } });
+
+  if (sb) {
+    S.roomOk = true;
+    const ch = sb.channel('rr-room', { config: { presence: { key: S.me } } });
+    ch.on('presence', { event: 'sync' }, () => {
+      const next = new Set(Object.keys(ch.presenceState())); next.add(S.me);
+      S.online = next;
+      if (S.phase === 'app' && S.tab === 'now') render();
+    }).subscribe(status => { if (status === 'SUBSCRIBED') ch.track({ uid: S.me, at: Date.now() }); });
+  }
+  setInterval(tick, 1000);
+  requestAnimationFrame(step);
+}
+function ensureSessionSub(id) {
+  if (sessionSubs.has(id)) return;
+  sessionSubs.set(id, store.subscribeSessions(id, list => { S.sessions.set(id, list); if (S.tab === 'log') render(); }));
+}
+
+// ---------- actions ----------
+let busy = false;
+async function act(fn) {
+  if (busy) return;
+  busy = true;
+  try { await fn(); }
+  catch (e) { console.error(e); S.storeNote = '저장하지 못했어요. 이 링크에 쓰기 권한(편집자)이 있는지 확인해 주세요.'; render(); }
+  finally { busy = false; }
+}
+function myReader() { return S.readers.get(S.me); }
+
+function saveProfile() {
+  const nick = ($('#nick')?.value || '').trim();
+  if (!S.setupAnimal || !nick) return;
+  const prev = myReader() || {};
+  act(async () => {
+    await store.setReader({ animal: S.setupAnimal, nickname: nick.slice(0, 20), status: prev.status || 'idle',
+      accum: prev.accum || 0, startedAt: prev.startedAt || null, sessionStartedAt: prev.sessionStartedAt || null, updatedAt: Date.now() });
+    S.phase = 'app';
+    try { localStorage.setItem('rr.lastAnimal', S.setupAnimal); } catch (e) {}
+    render();
+  });
+}
+function startReading() {
+  const now = Date.now();
+  act(() => store.updateReader({ status: 'reading', startedAt: now, accum: 0, sessionStartedAt: now, updatedAt: now }));
+}
+function pauseReading() {
+  const r = myReader(); if (!r || r.status !== 'reading') return;
+  const now = Date.now();
+  act(() => store.updateReader({ status: 'paused', accum: elapsedOf(r, now), startedAt: null, updatedAt: now }));
+}
+function resumeReading() {
+  const r = myReader(); if (!r || r.status !== 'paused') return;
+  const now = Date.now();
+  act(() => store.updateReader({ status: 'reading', startedAt: now, updatedAt: now }));
+}
+function stopReading() {
+  const r = myReader(); if (!r || r.status === 'idle') return;
+  const now = Date.now();
+  const ms = elapsedOf(r, now);
+  S.modal = { seconds: Math.max(1, Math.round(ms / 1000)), startedAt: r.sessionStartedAt || (now - ms), endedAt: now, title: '', note: '', err: '', saving: false };
+  act(() => store.updateReader({ status: 'paused', accum: ms, startedAt: null, updatedAt: now }));
+  render();
+}
+function finishSession() {
+  const m = S.modal; if (!m || m.saving) return;
+  const title = ($('#s-title')?.value || m.title || '').trim().slice(0, 80);
+  if (!title) { m.err = '책 제목을 적어 주세요.'; render(); return; }
+  const note = ($('#s-note')?.value || m.note || '').trim().slice(0, 300);
+  m.saving = true; m.err = ''; render();
+  act(async () => {
+    try {
+      await store.addSession({ startedAt: m.startedAt, endedAt: m.endedAt, seconds: m.seconds, title, note });
+      await store.updateReader({ status: 'idle', accum: 0, startedAt: null, sessionStartedAt: null, updatedAt: Date.now() });
+      S.modal = null;
+      render();
+    } catch (e) { m.saving = false; throw e; }
+  });
+}
+function cancelStop() { S.modal = null; render(); }
+function deleteSession(id) {
+  const mine = (S.sessions.get(S.me) || []).find(x => x.id === id);
+  if (!mine) return;
+  S.confirmDel = null;
+  act(async () => {
+    await store.deleteSession(id);
+    render();
+  });
+}
+
+// ---------- wandering ----------
+function walkerFor(id, room) {
+  let w = walkers.get(id);
+  if (!w) {
+    const W = Math.max(1, room.clientWidth - SPRITE_W), H = Math.max(1, room.clientHeight - SPRITE_H);
+    w = { x: hash(id) * W, y: hash(id + 'y') * H, tx: 0, ty: 0, wait: 0.5 + hash(id + 'w') * 2, face: 1, speed: 14 + hash(id + 's') * 10, moving: false };
+    w.tx = w.x; w.ty = w.y;
+    walkers.set(id, w);
+  }
+  return w;
+}
+function newTarget(w, W, H, others) {
+  for (let i = 0; i < 8; i++) {
+    const tx = Math.random() * W, ty = Math.random() * H;
+    const d = Math.hypot(tx - w.x, ty - w.y);
+    if (d < 60) continue;
+    if (others.some(o => Math.hypot(o.x - tx, o.y - ty) < 90)) continue;
+    w.tx = tx; w.ty = ty; return;
+  }
+  w.tx = Math.random() * W; w.ty = Math.random() * H;
+}
+let lastTs = 0;
+function step(ts) {
+  requestAnimationFrame(step);
+  const dt = Math.min(0.05, (ts - lastTs) / 1000 || 0); lastTs = ts;
+  const room = $('#room'); if (!room) return;
+  const W = Math.max(1, room.clientWidth - SPRITE_W), H = Math.max(1, room.clientHeight - SPRITE_H);
+  const els = room.querySelectorAll('.sprite');
+  const all = [...els].map(el => walkerFor(el.dataset.uid, room));
+  els.forEach((el, i) => {
+    const id = el.dataset.uid, w = all[i], r = S.readers.get(id);
+    w.x = Math.min(w.x, W); w.y = Math.min(w.y, H); w.tx = Math.min(w.tx, W); w.ty = Math.min(w.ty, H);
+    const canWalk = !REDUCED && r && (r.status || 'idle') === 'idle' && (id !== S.me || !S.modal);
+    w.moving = false;
+    if (canWalk) {
+      const dx = w.tx - w.x, dy = w.ty - w.y, d = Math.hypot(dx, dy);
+      if (d < 1.5) {
+        w.wait -= dt;
+        if (w.wait <= 0) { newTarget(w, W, H, all.filter(o => o !== w)); w.wait = 2 + Math.random() * 6; }
+      } else {
+        const stepLen = Math.min(d, w.speed * dt);
+        w.x += dx / d * stepLen; w.y += dy / d * stepLen; w.moving = true;
+        if (Math.abs(dx) > 2) w.face = dx < 0 ? -1 : 1;
+      }
+    } else { w.tx = w.x; w.ty = w.y; }
+    el.style.transform = `translate(${w.x.toFixed(1)}px, ${w.y.toFixed(1)}px)`;
+    el.style.setProperty('--face', w.face);
+    el.style.setProperty('--bob', w.moving ? `${(Math.sin(ts / 110) * 1.8).toFixed(2)}px` : '0px');
+  });
+}
+
+// ---------- render ----------
+function render() {
+  const app = $('#app');
+  const active = document.activeElement;
+  const keep = active && active.id && app.contains(active) && 'value' in active
+    ? { id: active.id, value: active.value, s: active.selectionStart, e: active.selectionEnd } : null;
+  let body = '';
+  if (S.phase === 'loading') body = `<div class="empty"><b>방에 들어가는 중</b>잠시만요.</div>`;
+  else if (S.phase === 'setup') body = renderSetup();
+  else body = S.tab === 'now' ? renderRoom() : renderLog();
+  document.body.classList.toggle('scroll', !(S.phase === 'app' && S.tab === 'now'));
+  app.innerHTML = `
+    <header class="top">
+      <div class="brand">같이 읽는 방 ${S.phase === 'app' && S.roomOk ? `<small>${S.online.size}명 접속 중</small>` : ''}</div>
+      ${S.phase === 'app' ? `<div class="icons" role="tablist">
+        <button class="iconbtn" role="tab" data-tab="now" aria-selected="${S.tab === 'now'}" title="지금" aria-label="지금">${ICON.now}</button>
+        <button class="iconbtn" role="tab" data-tab="log" aria-selected="${S.tab === 'log'}" title="기록" aria-label="기록">${ICON.log}</button>
+        <button class="iconbtn profile" id="edit-profile" title="프로필 바꾸기" aria-label="프로필 바꾸기">${ICON.profile}</button>
+      </div>` : ''}
+    </header>
+    ${S.storeNote ? `<div class="notice">${esc(S.storeNote)}</div>` : ''}
+    ${body}
+    ${S.modal ? renderModal() : ''}`;
+  bind();
+  if (keep) {
+    const el = document.getElementById(keep.id);
+    if (el && 'value' in el) {
+      el.value = keep.value;
+      el.focus({ preventScroll: true });
+      try { if (keep.s != null) el.setSelectionRange(keep.s, keep.e); } catch (e) {}
+    }
+  }
+}
+function renderSetup() {
+  const r = myReader();
+  if (!S.setupAnimal) { S.setupAnimal = r?.animal || null; try { S.setupAnimal = S.setupAnimal || localStorage.getItem('rr.lastAnimal'); } catch (e) {} }
+  return `<section class="setup">
+    <h1>${r ? '프로필 바꾸기' : '어떤 모습으로 들어갈까요?'}</h1>
+    <p class="lead">캐릭터 하나와 닉네임을 정하면 방에 들어갈 수 있어요.</p>
+    <div class="animal-grid" role="group" aria-label="캐릭터 고르기">
+      ${ANIMALS.map(([k, n]) => `<button type="button" class="animal-pick" data-animal="${k}" aria-pressed="${S.setupAnimal === k}">${charSvg(k)}<span>${n}</span></button>`).join('')}
+    </div>
+    <div class="field"><label for="nick">닉네임</label><input id="nick" maxlength="20" placeholder="예: 하루" value="${esc(r?.nickname || '')}" autocomplete="nickname"></div>
+    <div class="btn-row">
+      ${r ? `<button class="btn ghost" id="setup-cancel">취소</button>` : ''}
+      <button class="btn primary" id="setup-save" ${S.setupAnimal ? '' : 'disabled'}>${r ? '저장' : '입장하기'}</button>
+    </div>
+  </section>`;
+}
+function visibleReaders() {
+  const out = [];
+  for (const [id, r] of S.readers) {
+    const here = !S.roomOk || S.online.has(id);
+    if (id === S.me || here || r.status !== 'idle') out.push([id, r, here]);
+  }
+  return out;
+}
+function renderRoom() {
+  const list = visibleReaders();
+  const others = list.filter(([id]) => id !== S.me).length;
+  const sprites = list.map(([id, r, here]) => {
+    const mine = id === S.me;
+    const st = r.status || 'idle';
+    return `<div class="sprite ${st === 'reading' ? 'reading' : ''} ${!here && !mine ? 'away' : ''}" data-uid="${esc(id)}">
+      ${!here && !mine ? `<span class="zz">zz</span>` : ''}
+      ${st === 'reading' ? `<span class="dots" aria-hidden="true">···</span>` : ''}
+      <button class="book ${st !== 'idle' ? 'on' : ''} ${mine ? 'mine' : ''}" data-book="${mine ? '1' : ''}"
+        ${mine ? '' : 'tabindex="-1" aria-hidden="true"'} aria-label="${st === 'idle' ? '읽기 시작' : '읽기 종료'}" title="${mine ? (st === 'idle' ? '탭해서 읽기 시작' : '탭해서 읽기 종료') : ''}">${st === 'idle' ? '📕' : '📖'}</button>
+      <div class="body">${charSvg(r.animal)}</div>
+      <div class="name">${esc(r.nickname || '이름 없음')}${mine ? '<span class="me">나</span>' : ''}</div>
+      <div class="timer ${st}" data-timer="${esc(id)}">${st === 'idle' ? '' : fmtClock(elapsedOf(r))}</div>
+      ${mine && st !== 'idle' ? `<div class="ctrl">
+        ${st === 'reading' ? `<button data-act="pause">잠깐</button>` : `<button data-act="resume">다시</button>`}
+        <button class="stop" data-act="stop">끝</button>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+  const my = myReader();
+  const foot = others === 0
+    ? '아직 나 혼자예요. 링크를 친구에게 공유하면 여기서 같이 읽을 수 있어요.'
+    : (my?.status === 'idle' ? '머리 위 📕를 탭하면 읽기 시작, 📖를 한 번 더 탭하면 끝' : '');
+  return `<div class="room" id="room">${sprites}${foot ? `<div class="room-foot">${foot}</div>` : ''}</div>`;
+}
+function groupBooks(list) {
+  const groups = new Map();
+  for (const sess of list) {
+    const key = (sess.title || '').trim().toLowerCase() || '\u0000';
+    if (!groups.has(key)) groups.set(key, { title: (sess.title || '').trim(), items: [], seconds: 0, latest: 0 });
+    const g = groups.get(key);
+    g.items.push(sess); g.seconds += sess.seconds || 0; g.latest = Math.max(g.latest, sess.endedAt || 0);
+  }
+  const out = [...groups.values()];
+  out.sort((a, b) => b.latest - a.latest);
+  for (const g of out) g.items.sort((a, b) => (b.endedAt || 0) - (a.endedAt || 0));
+  return out;
+}
+function bubble(sess, mine, withTitle) {
+  const confirming = S.confirmDel === sess.id;
+  const hasBody = !!sess.note;
+  return `<div class="bub ${mine ? 'mine' : ''}">
+    ${withTitle ? `<div class="top"><div class="t ${sess.title ? '' : 'un'}">${sess.title ? esc(sess.title) : '제목 없음'}</div></div>` : ''}
+    ${sess.note ? `<div class="note">${esc(sess.note)}</div>` : ''}
+    ${!hasBody && !withTitle ? `<div class="blank">소감 없이 읽음</div>` : ''}
+    ${mine && !confirming ? `<button type="button" class="x" data-del="${esc(sess.id)}" aria-label="이 기록 지우기">×</button>` : ''}
+    ${confirming ? `<div class="cf">이 기록을 지울까요? <button type="button" class="yes" data-del-yes="${esc(sess.id)}">네</button><button type="button" data-del-no="1">아니오</button></div>` : ''}
+  </div>`;
+}
+function renderLog() {
+  const ids = [...S.readers.keys()].sort((a, b) => (a === S.me ? -1 : b === S.me ? 1 : 0));
+  if (!ids.length) return `<div class="empty"><b>아직 기록이 없어요</b>지금 화면에서 읽기를 시작해 보세요.</div>`;
+  return `<section class="log">${ids.map(id => {
+    const r = S.readers.get(id);
+    const list = S.sessions.get(id) || [];
+    const total = list.reduce((a, s) => a + (s.seconds || 0), 0);
+    const mine = id === S.me;
+    const open = S.expanded.has(id);
+    let body = '';
+    if (!list.length) body = `<div class="none">아직 기록이 없어요</div>`;
+    else if (!open) {
+      body = bubble(list[0], mine, true) + (list.length > 1 ? `<div class="more"><button data-expand="${esc(id)}">더보기 (${list.length - 1})</button></div>` : '');
+    } else {
+      body = groupBooks(list).map(g => `<div class="cluster">${g.items.map((sess, i) => bubble(sess, mine, i === 0)).join('')}</div>`).join('')
+        + `<div class="more"><button data-expand="${esc(id)}">접기</button></div>`;
+    }
+    return `<article class="rec">
+      <div class="av">${charSvg(r.animal)}</div>
+      <div class="col">
+        <div class="who"><div class="n">${esc(r.nickname || '이름 없음')}${mine ? '<small>나</small>' : ''}</div><div class="tot">${total ? fmtDur(total) : '0분'}</div></div>
+        ${body}
+      </div>
+    </article>`;
+  }).join('')}</section>`;
+}
+function recentTitles() {
+  const seen = new Set(), out = [];
+  for (const sess of S.sessions.get(S.me) || []) {
+    const t = (sess.title || '').trim(); const k = t.toLowerCase();
+    if (!t || seen.has(k)) continue;
+    seen.add(k); out.push(t);
+    if (out.length >= 8) break;
+  }
+  return out;
+}
+function renderModal() {
+  const m = S.modal;
+  return `<div class="overlay" id="overlay">
+    <form class="sheet" id="finish-form">
+      <h3>잘 읽었어요</h3>
+      <div class="sum">이번에 <b>${fmtClock(m.seconds * 1000)}</b> 읽었어요. 무슨 책이었나요?</div>
+      <div class="field"><label for="s-title">책 제목 <i>*</i></label><input id="s-title" maxlength="80" placeholder="읽은 책 제목" value="${esc(m.title)}" required list="title-list" autocomplete="off">
+        <datalist id="title-list">${recentTitles().map(t => `<option value="${esc(t)}"></option>`).join('')}</datalist>
+        ${recentTitles().length ? `<div class="chips" aria-label="전에 적은 제목">${recentTitles().map(t => `<button type="button" class="chip ${m.title.trim() === t ? 'on' : ''}" data-title="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}
+      </div>
+      <div class="field"><label for="s-note">한 줄 소감 <span style="color:var(--ink-soft)">(건너뛰어도 돼요)</span></label><textarea id="s-note" maxlength="300" placeholder="오늘 읽으면서 든 생각 한 줄">${esc(m.note)}</textarea></div>
+      ${m.err ? `<div class="err">${esc(m.err)}</div>` : ''}
+      <div class="btn-row">
+        <button type="submit" class="btn primary" id="finish-save" ${m.saving ? 'disabled' : ''}>${m.saving ? '저장하는 중…' : '저장'}</button>
+      </div>
+      <div class="again"><button type="button" id="finish-cancel" ${m.saving ? 'disabled' : ''}>아직 다 안 읽었어요, 계속 읽기</button></div>
+    </form>
+  </div>`;
+}
+function bind() {
+  const app = $('#app');
+  app.querySelectorAll('.animal-pick').forEach(b => b.addEventListener('click', () => { S.setupAnimal = b.dataset.animal; render(); }));
+  $('#setup-save')?.addEventListener('click', saveProfile);
+  $('#nick')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveProfile(); } });
+  $('#setup-cancel')?.addEventListener('click', () => { S.phase = 'app'; render(); });
+  $('#edit-profile')?.addEventListener('click', () => { S.setupAnimal = myReader()?.animal || null; S.phase = 'setup'; render(); });
+  app.querySelectorAll('[data-tab]').forEach(t => t.addEventListener('click', () => { S.tab = t.dataset.tab; try { localStorage.setItem('rr.tab', S.tab); } catch (e) {} render(); }));
+  app.querySelectorAll('[data-book="1"]').forEach(b => b.addEventListener('click', () => {
+    const r = myReader(); if (!r) return;
+    if (r.status === 'idle') startReading(); else stopReading();
+  }));
+  app.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', () => ({ pause: pauseReading, resume: resumeReading, stop: stopReading })[b.dataset.act]()));
+  app.querySelectorAll('[data-expand]').forEach(b => b.addEventListener('click', () => { const id = b.dataset.expand; S.expanded.has(id) ? S.expanded.delete(id) : S.expanded.add(id); render(); }));
+  $('#finish-form')?.addEventListener('submit', e => { e.preventDefault(); finishSession(); });
+  $('#finish-cancel')?.addEventListener('click', cancelStop);
+  app.querySelectorAll('[data-title]').forEach(b => b.addEventListener('click', () => { if (!S.modal) return; S.modal.title = b.dataset.title; S.modal.err = ''; const ti = $('#s-title'); if (ti) ti.value = b.dataset.title; render(); setTimeout(() => $('#s-note')?.focus(), 30); }));
+  $('#s-title')?.addEventListener('input', e => { if (S.modal) { S.modal.title = e.target.value; if (S.modal.err && e.target.value.trim()) { S.modal.err = ''; $('.sheet .err')?.remove(); } } });
+  $('#s-note')?.addEventListener('input', e => { if (S.modal) S.modal.note = e.target.value; });
+  app.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => { S.confirmDel = b.dataset.del; render(); }));
+  app.querySelectorAll('[data-del-no]').forEach(b => b.addEventListener('click', () => { S.confirmDel = null; render(); }));
+  app.querySelectorAll('[data-del-yes]').forEach(b => b.addEventListener('click', () => deleteSession(b.dataset.delYes)));
+  if (S.modal && !S.modal.title && !document.activeElement?.id) setTimeout(() => $('#s-title')?.focus(), 50);
+  const room = $('#room');
+  if (room) room.querySelectorAll('.sprite').forEach(el => { const w = walkerFor(el.dataset.uid, room); el.style.transform = `translate(${w.x}px, ${w.y}px)`; el.style.setProperty('--face', w.face); });
+}
+function tick() {
+  if (S.phase !== 'app' || S.tab !== 'now') return;
+  const now = Date.now();
+  document.querySelectorAll('[data-timer]').forEach(el => {
+    const r = S.readers.get(el.dataset.timer);
+    if (!r || r.status === 'idle') return;
+    el.textContent = fmtClock(elapsedOf(r, now));
+  });
+}
+
+boot();
+})();
+</script>
+
+</body>
+</html>
