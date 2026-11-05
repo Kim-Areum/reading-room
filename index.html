@@ -115,6 +115,13 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .empty { text-align: center; color: var(--ink-soft); padding: 40px 12px; }
 .empty b { display: block; font-weight: 400; color: var(--ink); font-size: 22px; margin-bottom: 4px; }
 
+/* ----- first-time guide: floats above my book until the first read ----- */
+.sprite .guide { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 6px; width: max-content; max-width: 190px; background: var(--paper); border: 1.5px solid var(--ink); border-radius: 12px; padding: 6px 11px; font-size: 14px; line-height: 1.3; text-align: center; color: var(--ink); animation: floaty 2.2s ease-in-out infinite; z-index: 7; cursor: pointer; }
+.sprite .guide small { font-size: 12px; color: var(--ink-soft); }
+.sprite .guide::after { content: ""; position: absolute; left: 50%; bottom: -7px; width: 11px; height: 11px; background: var(--paper); border-right: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); transform: translateX(-50%) rotate(45deg); }
+@keyframes floaty { 0%,100% { transform: translate(-50%, 0) } 50% { transform: translate(-50%, -6px) } }
+@media (prefers-reduced-motion: reduce) { .sprite .guide { animation: none; } }
+
 /* ----- chat ----- */
 .chat-fab { position: fixed; right: calc(16px + env(safe-area-inset-right, 0px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); width: 50px; height: 50px; border-radius: 999px; border: 0; background: var(--ink); color: var(--paper); display: inline-flex; align-items: center; justify-content: center; z-index: 8; box-shadow: 0 4px 14px rgba(0,0,0,.14); }
 .chat-fab svg { width: 24px; height: 24px; }
@@ -537,7 +544,10 @@ function saveProfile() {
     render();
   });
 }
+function guideDone() { try { return localStorage.getItem('rr.guideDone') === '1'; } catch (e) { return false; } }
+function setGuideDone() { try { localStorage.setItem('rr.guideDone', '1'); } catch (e) {} }
 function startReading() {
+  setGuideDone();
   const now = Date.now();
   act(() => store.updateReader({ status: 'reading', startedAt: now, accum: 0, sessionStartedAt: now, updatedAt: now }));
 }
@@ -742,6 +752,7 @@ function renderRoom() {
     const st = r.status || 'idle';
     return `<div class="sprite ${st === 'reading' ? 'reading' : ''} ${!here && !mine ? 'away' : ''}" data-uid="${esc(id)}">
       ${!here && !mine ? `<span class="zz">zz</span>` : ''}
+      ${mine && st === 'idle' && !guideDone() ? `<button type="button" class="guide" id="guide">📕를 탭하면 읽기 시작!<br><small>다 읽으면 📖를 한 번 더</small></button>` : ''}
       ${st === 'reading' ? `<span class="dots" aria-hidden="true">···</span>` : ''}
       <button class="book ${st !== 'idle' ? 'on' : ''} ${mine ? 'mine' : ''}" data-book="${mine ? '1' : ''}"
         ${mine ? '' : 'tabindex="-1" aria-hidden="true"'} aria-label="${st === 'idle' ? '읽기 시작' : '읽기 종료'}" title="${mine ? (st === 'idle' ? '탭해서 읽기 시작' : '탭해서 읽기 종료') : ''}">${st === 'idle' ? '📕' : '📖'}</button>
@@ -755,7 +766,7 @@ function renderRoom() {
     </div>`;
   }).join('');
   const my = myReader();
-  const foot = my?.status === 'idle' ? '머리 위 📕를 탭하면 읽기 시작, 📖를 한 번 더 탭하면 끝' : '';
+  const foot = '';
   const stack = S.chat.msgs.length ? `<div class="chat-stack" aria-live="polite">${S.chat.msgs.map(m => {
     const who = S.readers.get(m.uid)?.nickname || '누군가';
     return `<div class="msg ${m.uid === S.me ? 'mine' : ''}"><b>${esc(who)}</b><span>${esc(m.text)}</span></div>`; }).join('')}</div>` : '';
@@ -854,6 +865,7 @@ function bind() {
   $('#handoff-code')?.addEventListener('input', e => { S.handoff.code = e.target.value; });
   $('#handoff-code')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); adoptCode(); } });
   $('#handoff-go')?.addEventListener('click', adoptCode);
+  $('#guide')?.addEventListener('click', () => { setGuideDone(); render(); });
   $('#chat-open')?.addEventListener('click', () => { S.chat.open = true; render(); setTimeout(() => $('#chat-input')?.focus(), 30); });
   $('#chat-close')?.addEventListener('click', () => { S.chat.open = false; render(); });
   $('#chat-form')?.addEventListener('submit', e => { e.preventDefault(); sendChat(); });
