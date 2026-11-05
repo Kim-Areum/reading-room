@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
+<script>window.APP_VERSION = "20261105235515";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -328,6 +329,20 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 <script>
 (() => {
 'use strict';
+// 새 배포가 있으면 캐시를 우회한 주소로 한 번 다시 연다 (GitHub Pages가 index.html을 10분 캐시하므로)
+(async () => {
+  try {
+    if (!window.APP_VERSION || window.APP_VERSION === 'dev' || !/^https?:/.test(location.protocol)) return;
+    const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return;
+    const v = (await r.text()).trim();
+    if (!v || v === window.APP_VERSION) return;
+    const u = new URL(location.href);
+    if (u.searchParams.get('v') === v) return;
+    u.searchParams.set('v', v);
+    location.replace(u.toString());
+  } catch (e) {}
+})();
 const ANIMALS = [
   ['bear','곰'], ['penguin','펭귄'], ['dino','공룡'], ['pig','돼지'],
   ['hedgehog','고슴도치'], ['elephant','코끼리'], ['cow','소'], ['rabbit','토끼'],
