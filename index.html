@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="읽는 방">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>같이 읽는 방</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap">
@@ -66,6 +73,16 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .btn:disabled { opacity: 0.35; cursor: default; }
 .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
 .btn-row .btn { flex: 1 1 auto; }
+.handoff { margin-top: 22px; padding-top: 14px; border-top: 1px dashed var(--line); font-size: 15px; color: var(--ink-soft); }
+.handoff p { margin: 6px 0 0; }
+.handoff .hd { color: var(--ink); font-size: 17px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.handoff .hd b { font-weight: 400; letter-spacing: 0.12em; background: var(--accent); color: var(--accent-ink); border-radius: 8px; padding: 1px 10px; font-size: 19px; }
+.handoff .mini { border: 1.5px solid var(--line); background: var(--paper); border-radius: 999px; font-size: 14px; padding: 2px 10px; color: var(--ink); }
+.handoff .link { background: none; border: 0; color: var(--ink-soft); text-decoration: underline; font-size: 15px; padding: 0; }
+.handoff .code-row { display: flex; gap: 8px; margin-top: 6px; }
+.handoff .code-row input { flex: 1; min-width: 0; background: var(--paper); border: 1.5px solid var(--line); border-radius: 12px; padding: 8px 12px; font-size: 19px; letter-spacing: 0.1em; }
+.handoff .code-row .btn { padding: 8px 14px; font-size: 17px; }
+.handoff .err { color: var(--accent-deep); }
 
 /* ----- the room ----- */
 .room { position: relative; flex: 1; min-height: 360px; overflow: hidden; margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); }
@@ -312,6 +329,7 @@ const S = {
   expanded: new Set(),   // 'uid|title' groups opened fully
   confirmDel: null,      // session id awaiting delete confirmation
   setupAnimal: null,
+  handoff: { open: false, code: '', err: '', busy: false },
   storeNote: '',
 };
 let store = null;
@@ -377,6 +395,7 @@ function makeSupabaseStore(sb, uid) {
   setInterval(() => { loadReaders(); loadSessions(); }, 20000);
   return {
     kind: 'supabase',
+    async readerExists(id) { const { data, error } = await sb.from('rr_readers').select('id').eq('id', id).maybeSingle(); if (error) throw error; return !!data; },
     subscribeReaders(cb) { readerCbs.push(cb); loadReaders(); return () => {}; },
     subscribeSessions(id, cb) { sessCbs.set(id, cb); cb(sessionsCache.filter(x => x.readerId === id)); if (sessCbs.size === 1) loadSessions(); return () => sessCbs.delete(id); },
     async setReader(d) {
@@ -429,7 +448,7 @@ async function boot() {
     try { sb = window.supabase.createClient(cfg.url, cfg.anonKey); } catch (e) { console.error(e); }
   }
   if (sb) {
-    try { uid = localStorage.getItem('rr.uid'); if (!uid) { uid = 'u_' + crypto.randomUUID().replace(/-/g, '').slice(0, 20); localStorage.setItem('rr.uid', uid); } } catch (e) { uid = 'u_' + Math.random().toString(36).slice(2, 12); }
+    try { uid = localStorage.getItem('rr.uid'); if (!uid) { uid = 'u_' + Array.from(crypto.getRandomValues(new Uint8Array(8)), b => 'abcdefghjkmnpqrstuvwxyz23456789'[b % 31]).join(''); localStorage.setItem('rr.uid', uid); } } catch (e) { uid = 'u_' + Math.random().toString(36).slice(2, 12); }
     S.me = uid;
     store = makeSupabaseStore(sb, uid);
   } else {
@@ -535,6 +554,18 @@ function deleteSession(id) {
   });
 }
 
+async function adoptCode() {
+  const code = (S.handoff.code || '').trim().toLowerCase().replace(/^u_/, '');
+  if (!code) { S.handoff.err = '코드를 넣어 주세요.'; render(); return; }
+  S.handoff.busy = true; S.handoff.err = ''; render();
+  try {
+    const ok = await store.readerExists('u_' + code);
+    if (!ok) { S.handoff.busy = false; S.handoff.err = '이 코드로 된 캐릭터를 찾지 못했어요. 다시 확인해 주세요.'; render(); return; }
+    try { localStorage.setItem('rr.uid', 'u_' + code); } catch (e) {}
+    location.reload();
+  } catch (e) { console.error(e); S.handoff.busy = false; S.handoff.err = '확인하지 못했어요. 잠시 후 다시 시도해 주세요.'; render(); }
+}
+
 // ---------- wandering ----------
 function walkerFor(id, room) {
   let w = walkers.get(id);
@@ -633,6 +664,15 @@ function renderSetup() {
       ${r ? `<button class="btn ghost" id="setup-cancel">취소</button>` : ''}
       <button class="btn primary" id="setup-save" ${S.setupAnimal ? '' : 'disabled'}>${r ? '저장' : '입장하기'}</button>
     </div>
+    ${store && store.kind === 'supabase' ? (r ? `<div class="handoff">
+      <div class="hd">이어쓰기 코드 <b id="my-code">${esc(S.me.replace(/^u_/, ''))}</b> <button type="button" class="mini" id="copy-code">복사</button></div>
+      <p>다른 폰이나 홈 화면 앱에서 처음 열 때 이 코드를 넣으면 같은 캐릭터와 기록을 이어서 써요.</p>
+    </div>` : `<div class="handoff">
+      ${S.handoff.open ? `<div class="hd">이어쓰기 코드</div>
+        <div class="code-row"><input id="handoff-code" maxlength="12" placeholder="예: k3v6q2rt" value="${esc(S.handoff.code)}" autocapitalize="none" autocomplete="off" spellcheck="false"><button type="button" class="btn" id="handoff-go" ${S.handoff.busy ? 'disabled' : ''}>${S.handoff.busy ? '확인 중…' : '이어받기'}</button></div>
+        ${S.handoff.err ? `<p class="err">${esc(S.handoff.err)}</p>` : `<p>전에 쓰던 기기의 프로필 화면에 적힌 코드예요.</p>`}`
+      : `<button type="button" class="link" id="handoff-open">다른 기기에서 쓰던 캐릭터가 있어요</button>`}
+    </div>`) : ''}
   </section>`;
 }
 function visibleReaders() {
@@ -754,6 +794,11 @@ function bind() {
   $('#setup-save')?.addEventListener('click', saveProfile);
   $('#nick')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveProfile(); } });
   $('#setup-cancel')?.addEventListener('click', () => { S.phase = 'app'; render(); });
+  $('#copy-code')?.addEventListener('click', async () => { const code = S.me.replace(/^u_/, ''); try { await navigator.clipboard.writeText(code); $('#copy-code').textContent = '복사됨'; } catch (e) { const r = document.createRange(); r.selectNodeContents($('#my-code')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } });
+  $('#handoff-open')?.addEventListener('click', () => { S.handoff.open = true; render(); setTimeout(() => $('#handoff-code')?.focus(), 30); });
+  $('#handoff-code')?.addEventListener('input', e => { S.handoff.code = e.target.value; });
+  $('#handoff-code')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); adoptCode(); } });
+  $('#handoff-go')?.addEventListener('click', adoptCode);
   $('#edit-profile')?.addEventListener('click', () => { S.setupAnimal = myReader()?.animal || null; S.phase = 'setup'; render(); });
   app.querySelectorAll('[data-tab]').forEach(t => t.addEventListener('click', () => { S.tab = t.dataset.tab; try { localStorage.setItem('rr.tab', S.tab); } catch (e) {} render(); }));
   app.querySelectorAll('[data-book="1"]').forEach(b => b.addEventListener('click', () => {

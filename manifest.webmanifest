@@ -1,0 +1,15 @@
+{
+  "name": "같이 읽는 방",
+  "short_name": "읽는 방",
+  "description": "친구들과 한 방에서 책 읽는 시간을 재고 기록해요",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "lang": "ko",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
