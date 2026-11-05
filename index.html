@@ -130,10 +130,12 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .chat-bar .send { width: 40px; height: 40px; border-radius: 999px; border: 0; background: var(--accent); color: var(--accent-ink); display: inline-flex; align-items: center; justify-content: center; padding: 0; }
 .chat-bar .send svg { width: 20px; height: 20px; }
 .chat-bar .close { background: none; border: 0; color: var(--ink-soft); font-size: 16px; padding: 6px; }
-.chat-stack { position: absolute; top: 6px; right: max(12px, env(safe-area-inset-right, 0px)); max-width: min(72%, 320px); display: flex; flex-direction: column; align-items: flex-end; gap: 6px; z-index: 6; pointer-events: none; }
-.msg { background: var(--paper); border: 1.5px solid var(--ink); border-radius: 10px; padding: 5px 10px; font-size: 15px; line-height: 1.3; max-width: 100%; overflow-wrap: anywhere; animation: msgin .25s ease-out; }
-.msg b { font-weight: 400; color: var(--ink-soft); font-size: 13px; margin-right: 6px; }
-.msg.mine { border-color: var(--accent-deep); }
+.chat-box { position: absolute; top: 6px; right: max(12px, env(safe-area-inset-right, 0px)); width: min(72%, 320px); max-height: 38%; overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--paper); border: 1.5px solid var(--ink); border-radius: 12px; padding: 4px 0; z-index: 6; }
+.msg { display: flex; align-items: baseline; gap: 6px; padding: 4px 10px; font-size: 15px; line-height: 1.3; animation: msgin .25s ease-out; }
+.msg b { font-weight: 400; color: var(--ink-soft); font-size: 13px; white-space: nowrap; }
+.msg span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.msg time { font-size: 11px; color: var(--ink-soft); white-space: nowrap; }
+.msg.mine span { color: var(--accent-deep); }
 @keyframes msgin { from { opacity: 0; transform: translateY(-6px) } to { opacity: 1; transform: none } }
 @media (prefers-reduced-motion: reduce) { .msg { animation: none; } }
 
@@ -595,15 +597,10 @@ function deleteSession(id) {
   });
 }
 
-const CHAT_TTL = 90000, CHAT_MAX = 6;
+const CHAT_MAX = 200;
 function pushChat(m) {
   S.chat.msgs = [...S.chat.msgs.filter(x => x.id !== m.id), m].slice(-CHAT_MAX);
   if (S.phase === 'app' && S.tab === 'now') render();
-}
-function pruneChat() {
-  const now = Date.now();
-  const keep = S.chat.msgs.filter(m => now - m.at < CHAT_TTL);
-  if (keep.length !== S.chat.msgs.length) { S.chat.msgs = keep; if (S.phase === 'app' && S.tab === 'now') render(); }
 }
 async function sendChat() {
   const inp = $('#chat-input'); const text = (inp?.value || '').trim().slice(0, 120);
@@ -767,9 +764,10 @@ function renderRoom() {
   }).join('');
   const my = myReader();
   const foot = '';
-  const stack = S.chat.msgs.length ? `<div class="chat-stack" aria-live="polite">${S.chat.msgs.map(m => {
+  const stack = S.chat.msgs.length ? `<div class="chat-box" id="chat-box" aria-live="polite">${S.chat.msgs.map(m => {
     const who = S.readers.get(m.uid)?.nickname || '누군가';
-    return `<div class="msg ${m.uid === S.me ? 'mine' : ''}"><b>${esc(who)}</b><span>${esc(m.text)}</span></div>`; }).join('')}</div>` : '';
+    const d = new Date(m.at);
+    return `<div class="msg ${m.uid === S.me ? 'mine' : ''}"><b>${esc(who)}</b><span>${esc(m.text)}</span><time>${pad(d.getHours())}:${pad(d.getMinutes())}</time></div>`; }).join('')}</div>` : '';
   const chat = S.chat.open
     ? `<form class="chat-bar" id="chat-form"><input id="chat-input" maxlength="120" placeholder="메시지 보내기" autocomplete="off" enterkeyhint="send"><button type="submit" class="send" aria-label="보내기">${ICON.send}</button><button type="button" class="close" id="chat-close" aria-label="닫기">✕</button></form>`
     : `<button type="button" class="chat-fab" id="chat-open" aria-label="메시지 보내기">${ICON.chat}</button>`;
@@ -869,6 +867,7 @@ function bind() {
   $('#chat-open')?.addEventListener('click', () => { S.chat.open = true; render(); setTimeout(() => $('#chat-input')?.focus(), 30); });
   $('#chat-close')?.addEventListener('click', () => { S.chat.open = false; render(); });
   $('#chat-form')?.addEventListener('submit', e => { e.preventDefault(); sendChat(); });
+  const box = $('#chat-box'); if (box) box.scrollTop = box.scrollHeight;
   $('#edit-profile')?.addEventListener('click', () => { S.setupAnimal = myReader()?.animal || null; S.phase = 'setup'; render(); });
   app.querySelectorAll('[data-tab]').forEach(t => t.addEventListener('click', () => { S.tab = t.dataset.tab; try { localStorage.setItem('rr.tab', S.tab); } catch (e) {} render(); }));
   app.querySelectorAll('[data-book="1"]').forEach(b => b.addEventListener('click', () => {
@@ -890,7 +889,6 @@ function bind() {
   if (room) room.querySelectorAll('.sprite').forEach(el => { const w = walkerFor(el.dataset.uid, room); el.style.transform = `translate(${w.x}px, ${w.y}px)`; el.style.setProperty('--face', w.face); });
 }
 function tick() {
-  pruneChat();
   if (S.phase !== 'app' || S.tab !== 'now') return;
   const now = Date.now();
   document.querySelectorAll('[data-timer]').forEach(el => {
