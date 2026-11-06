@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<script>window.APP_VERSION = "20261106000529";</script>
+<script>window.APP_VERSION = "20261106155935";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -89,7 +89,10 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .room { position: relative; flex: 1; min-height: 360px; overflow: hidden; margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); }
 .room-foot { position: absolute; left: 0; right: 0; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 15px; color: var(--ink-soft); pointer-events: none; padding: 0 24px; }
 .sprite { position: absolute; left: 0; top: 0; width: 110px; display: flex; flex-direction: column; align-items: center; will-change: transform; --face: 1; --bob: 0px; }
-.sprite.away { opacity: 0.4; }
+.sprite.offline { opacity: 0.45; filter: grayscale(1); }
+.sprite.offline .book { opacity: 0.15; }
+.sprite .lamp { position: absolute; top: 12px; right: 22px; width: 9px; height: 9px; border-radius: 50%; background: #4cc96f; box-shadow: 0 0 0 3px rgba(76,201,111,.22), 0 0 10px rgba(76,201,111,.9); animation: lamp 2.2s ease-in-out infinite; }
+@keyframes lamp { 0%,100% { box-shadow: 0 0 0 3px rgba(76,201,111,.22), 0 0 8px rgba(76,201,111,.8) } 50% { box-shadow: 0 0 0 5px rgba(76,201,111,.12), 0 0 14px rgba(76,201,111,1) } }
 .sprite .book { background: none; border: 0; font-size: 24px; line-height: 1; padding: 6px 14px; border-radius: 999px; filter: grayscale(1); opacity: 0.3; transition: filter .2s, opacity .2s; transform: translateY(var(--bob)); }
 .sprite .book.on { filter: none; opacity: 1; }
 .sprite .book.mine { cursor: pointer; }
@@ -112,7 +115,6 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .sprite .ctrl { display: flex; gap: 5px; margin-top: 3px; }
 .sprite .ctrl button { border: 1px solid var(--ink); background: var(--paper); border-radius: 999px; font-size: 14px; padding: 2px 10px; color: var(--ink); line-height: 1.4; }
 .sprite .ctrl button.stop { border-color: var(--accent-deep); color: var(--accent-deep); }
-.sprite .zz { position: absolute; top: 2px; right: 12px; font-size: 12px; color: var(--ink-soft); letter-spacing: 0.08em; }
 .empty { text-align: center; color: var(--ink-soft); padding: 40px 12px; }
 .empty b { display: block; font-weight: 400; color: var(--ink); font-size: 22px; margin-bottom: 4px; }
 
@@ -186,7 +188,7 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .sheet .again button { background: none; border: 0; color: var(--ink-soft); font-size: 15px; text-decoration: underline; }
 .sheet .err { color: var(--accent-deep); font-size: 15px; margin-bottom: 8px; }
 
-@media (prefers-reduced-motion: reduce) { .sprite.reading .body, .sprite.reading .book, .sprite.reading .dots { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .sprite.reading .body, .sprite.reading .book, .sprite.reading .dots, .sprite .lamp { animation: none; } }
 </style>
 
 </head>
@@ -672,7 +674,7 @@ function step(ts) {
   els.forEach((el, i) => {
     const id = el.dataset.uid, w = all[i], r = S.readers.get(id);
     w.x = Math.min(w.x, W); w.y = Math.min(w.y, H); w.tx = Math.min(w.tx, W); w.ty = Math.min(w.ty, H);
-    const canWalk = !REDUCED && r && (r.status || 'idle') === 'idle' && (id !== S.me || !S.modal);
+    const canWalk = !REDUCED && r && (r.status || 'idle') === 'idle' && (id !== S.me || !S.modal) && isHere(id);
     w.moving = false;
     if (canWalk) {
       const dx = w.tx - w.x, dy = w.ty - w.y, d = Math.hypot(dx, dy);
@@ -749,12 +751,12 @@ function renderSetup() {
     </div>`) : ''}
   </section>`;
 }
+function isHere(id) { return !S.roomOk || id === S.me || S.online.has(id); }
 function visibleReaders() {
   const out = [];
-  for (const [id, r] of S.readers) {
-    const here = !S.roomOk || S.online.has(id);
-    if (id === S.me || here || r.status !== 'idle') out.push([id, r, here]);
-  }
+  for (const [id, r] of S.readers) out.push([id, r, isHere(id)]);
+  // online first, then by name, so the order is stable
+  out.sort((a, b) => (b[2] - a[2]) || String(a[1].nickname).localeCompare(String(b[1].nickname), 'ko'));
   return out;
 }
 function renderRoom() {
@@ -762,8 +764,8 @@ function renderRoom() {
   const sprites = list.map(([id, r, here]) => {
     const mine = id === S.me;
     const st = r.status || 'idle';
-    return `<div class="sprite ${st === 'reading' ? 'reading' : ''} ${!here && !mine ? 'away' : ''}" data-uid="${esc(id)}">
-      ${!here && !mine ? `<span class="zz">zz</span>` : ''}
+    return `<div class="sprite ${st === 'reading' ? 'reading' : ''} ${here ? 'online' : 'offline'}" data-uid="${esc(id)}">
+      ${here ? `<span class="lamp" title="접속 중" aria-label="접속 중"></span>` : ''}
       ${mine && st === 'idle' && !guideDone() ? `<button type="button" class="guide" id="guide">📕를 탭하면 읽기 시작!<br><small>다 읽으면 📖를 한 번 더</small></button>` : ''}
       ${st === 'reading' ? `<span class="dots" aria-hidden="true">···</span>` : ''}
       <button class="book ${st !== 'idle' ? 'on' : ''} ${mine ? 'mine' : ''}" data-book="${mine ? '1' : ''}"
