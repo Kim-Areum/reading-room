@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<script>window.APP_VERSION = "20261106160648";</script>
+<script>window.APP_VERSION = "20261106160824";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -152,8 +152,9 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .sh-head .n { font-size: 17px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sh-head .n small { font-size: 11px; color: var(--ink-soft); margin-left: 3px; }
 .sh-head .tot { font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
-.shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px 5px; padding: 4px 4px 0; min-height: 72px;
-  background: repeating-linear-gradient(to bottom, transparent 0, transparent 70px, var(--ink) 70px, var(--ink) 72px); background-origin: content-box; }
+.shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px 5px; padding: 4px 6px 6px; min-height: 76px; box-sizing: content-box;
+  background: repeating-linear-gradient(to bottom, transparent 0, transparent 66px, var(--ink) 66px, var(--ink) 68px, transparent 68px, transparent 72px); background-origin: content-box; background-clip: content-box; }
+.shelf:empty { min-height: 68px; }
 .bk { height: 66px; padding: 0; border: 0; background: none; display: block; }
 .bk img { height: 66px; width: 46px; object-fit: cover; display: block; border: 1.5px solid var(--ink); border-radius: 2px 4px 4px 2px; background: var(--paper); }
 .bk .spine { display: flex; align-items: center; justify-content: center; height: 66px; width: 22px; border: 1.5px solid var(--ink); border-radius: 3px; background: var(--accent); writing-mode: vertical-rl; font-size: 11px; line-height: 1; padding: 4px 0; overflow: hidden; color: var(--accent-ink); }
