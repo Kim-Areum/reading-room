@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<script>window.APP_VERSION = "20261106162138";</script>
+<script>window.APP_VERSION = "20261106162808";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -53,6 +53,55 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .iconbtn svg { width: 18px; height: 18px; }
 
 .notice { font-size: 15px; color: var(--ink-soft); border: 1px dashed var(--line); border-radius: 10px; padding: 8px 12px; margin-block: 6px 4px; }
+
+/* ----- rooms ----- */
+.rooms { padding-block: 12px; }
+.rooms h1 { font-weight: 400; font-size: 30px; margin: 8px 0 2px; }
+.rooms p.lead { color: var(--ink-soft); margin: 0 0 16px; }
+.room-list { list-style: none; margin: 0 0 18px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.room-item { display: flex; align-items: center; gap: 8px; border: 1.5px solid var(--ink); border-radius: 14px; padding: 8px 10px 8px 12px; }
+.room-go { flex: 1; min-width: 0; background: none; border: 0; text-align: left; display: flex; flex-direction: column; padding: 0; }
+.room-go b { font-weight: 400; font-size: 20px; line-height: 1.2; }
+.room-go small { font-size: 13px; color: var(--ink-soft); letter-spacing: 0.06em; }
+.room-item .mini { border: 1.5px solid var(--line); background: var(--paper); border-radius: 999px; font-size: 14px; padding: 3px 10px; color: var(--ink); white-space: nowrap; }
+.room-item .mini.ghost { border-color: transparent; color: var(--ink-soft); padding: 3px 6px; }
+.room-actions { display: flex; flex-direction: column; gap: 14px; }
+.room-actions .code-row { display: flex; gap: 8px; }
+.room-actions .code-row input { flex: 1; min-width: 0; background: var(--paper); border: 1.5px solid var(--line); border-radius: 12px; padding: 8px 12px; font-size: 19px; }
+.room-actions .code-row .btn { padding: 8px 14px; font-size: 17px; white-space: nowrap; }
+.room-actions .err { color: var(--accent-deep); margin: 0; font-size: 15px; }
+.rooms .none { color: var(--ink-soft); margin-bottom: 16px; }
+.roomsbtn { background: none; border: 1.5px solid var(--line); border-radius: 999px; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; color: var(--ink-soft); padding: 0; margin-right: 6px; vertical-align: middle; }
+.roomsbtn svg { width: 15px; height: 15px; }
+
+/* ----- person timeline ----- */
+.person { padding-block: 8px 24px; }
+.p-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.p-head .back { background: none; border: 1.5px solid var(--line); border-radius: 999px; width: 34px; height: 34px; font-size: 18px; color: var(--ink); padding: 0; }
+.p-head .av { width: 44px; height: 48px; }
+.p-head .av svg { width: 100%; height: 100%; display: block; }
+.p-head .n { font-size: 22px; line-height: 1.15; }
+.p-head .n small { font-size: 12px; color: var(--ink-soft); margin-left: 4px; }
+.p-head .tot { font-size: 14px; color: var(--ink-soft); }
+.timeline { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--line); display: flex; flex-direction: column; gap: 14px; }
+.tl { position: relative; }
+.tl::before { content: ""; position: absolute; left: -20px; top: 7px; width: 10px; height: 10px; border-radius: 50%; background: var(--paper); border: 2px solid var(--ink); }
+.tl-date { font-size: 13px; color: var(--ink-soft); margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+.tl-card { position: relative; display: flex; gap: 10px; align-items: flex-start; border: 1.5px solid var(--ink); border-radius: 14px; padding: 9px 12px; }
+.tl-card.mine { padding-right: 30px; }
+.tl-cover { width: 40px; height: 58px; object-fit: cover; border: 1.5px solid var(--ink); border-radius: 2px 4px 4px 2px; flex: none; }
+.tl-cover.none { background: var(--accent); display: block; }
+.tl-body { min-width: 0; flex: 1; }
+.tl-title { font-size: 18px; line-height: 1.25; overflow-wrap: anywhere; }
+.tl-title.un { color: var(--ink-soft); }
+.tl-note { font-size: 16px; line-height: 1.35; margin-top: 3px; overflow-wrap: anywhere; }
+.tl-card .x { position: absolute; top: 6px; right: 8px; background: none; border: 0; color: var(--ink-soft); font-size: 16px; line-height: 1; padding: 2px 4px; }
+.tl-card .x:hover { color: var(--accent-deep); }
+.tl-card .cf { margin-top: 6px; font-size: 13px; color: var(--ink-soft); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.tl-card .cf button { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; font-size: 13px; padding: 1px 9px; color: var(--ink); line-height: 1.4; }
+.tl-card .cf button.yes { border-color: var(--accent-deep); color: var(--accent-deep); }
+.person .none { color: var(--ink-soft); }
+.shelf-card { cursor: pointer; }
 
 /* ----- setup ----- */
 .setup { padding-block: 12px; }
@@ -166,7 +215,6 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .cluster .bub:last-child:not(:first-child) { border-radius: 6px 14px 16px 16px; }
 .bub { position: relative; border: 1.5px solid var(--ink); border-radius: 16px; padding: 9px 12px 9px; min-width: 0; background: var(--paper); }
 .bub::before { content: ""; position: absolute; left: -9px; top: 16px; width: 12px; height: 12px; background: var(--paper); border-left: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); transform: rotate(45deg); }
-.book-sheet .bub::before { display: none; }
 .bub .top { display: flex; align-items: baseline; gap: 8px; }
 .bub .top .t { font-size: 18px; line-height: 1.25; flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .bub .top .t.un { color: var(--ink-soft); }
@@ -178,11 +226,6 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .bub .cf { margin-top: 6px; font-size: 13px; color: var(--ink-soft); display: flex; gap: 6px; align-items: center; }
 .bub .cf button { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; font-size: 13px; padding: 1px 9px; color: var(--ink); line-height: 1.4; }
 .bub .cf button.yes { border-color: var(--accent-deep); color: var(--accent-deep); }
-.book-sheet .bs-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
-.book-sheet .bs-t { flex: 1; min-width: 0; }
-.book-sheet h3 { margin: 0; }
-.cover-md { width: 54px; height: 78px; object-fit: cover; border: 1.5px solid var(--ink); border-radius: 2px 4px 4px 2px; flex: none; }
-.x-close { background: none; border: 0; color: var(--ink-soft); font-size: 18px; padding: 2px 6px; }
 .title-row { display: flex; gap: 8px; align-items: center; }
 .title-row input { flex: 1; min-width: 0; }
 .cover-sm { width: 34px; height: 48px; object-fit: cover; border: 1.5px solid var(--ink); border-radius: 2px 3px 3px 2px; flex: none; }
@@ -373,7 +416,8 @@ const ANIMALS = [
 const ANIMAL_NAME = Object.fromEntries(ANIMALS);
 const ICON = {
   now: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M10 20v-5h4v5"/></svg>',
-  log: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 18v2.5"/><path d="M8 7h8M8 10.5h8"/></svg>',
+  log: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M5 20V5h3v15M10 20V8h3v12M15 20l2.5-11 3 .7L18 20"/></svg>',
+  rooms: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
   chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>',
   send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
   profile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>',
@@ -381,7 +425,10 @@ const ICON = {
 
 // ---------- state ----------
 const S = {
-  phase: 'loading',
+  phase: 'loading',       // loading | rooms | setup | app
+  room: null,             // {id, name} current room (supabase mode)
+  roomsUi: { err: '', busy: false, creating: false },
+  person: null,           // reader id whose timeline is open (tab 'log')
   tab: 'now',
   me: null,
   readers: new Map(),
@@ -390,14 +437,42 @@ const S = {
   onlineRaw: new Set(),  // presence keys as the room reports them, registered or not
   roomOk: false,
   modal: null,            // {seconds, startedAt, endedAt, title, note, file, preview, err, saving}
-  bookOpen: null,        // {uid, key}: a book's notes sheet
   confirmDel: null,      // session id awaiting delete confirmation
   setupAnimal: null,
   handoff: { open: false, code: '', err: '', busy: false },
   chat: { open: false, msgs: [] },   // msgs: {id, uid, text, at}; ephemeral, broadcast only
   storeNote: '',
 };
-let store = null, roomCh = null;
+let store = null, roomCh = null, sbClient = null;
+const CODE_CHARS = 'abcdefghjkmnpqrstuvwxyz23456789';
+function randCode(n) { return Array.from(crypto.getRandomValues(new Uint8Array(n)), b => CODE_CHARS[b % CODE_CHARS.length]).join(''); }
+function rememberedRooms() { try { const v = JSON.parse(localStorage.getItem('rr.rooms') || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+function rememberRoom(room) { try { const list = rememberedRooms().filter(r => r.id !== room.id); list.unshift({ id: room.id, name: room.name }); localStorage.setItem('rr.rooms', JSON.stringify(list.slice(0, 20))); } catch (e) {} }
+function forgetRoom(id) { try { localStorage.setItem('rr.rooms', JSON.stringify(rememberedRooms().filter(r => r.id !== id))); } catch (e) {} }
+function gotoRoom(id) { const u = new URL(location.href); u.search = ''; u.searchParams.set('room', id); location.href = u.toString(); }
+function roomLink(id) { const u = new URL(location.href); u.search = ''; u.searchParams.set('room', id); return u.toString(); }
+async function createRoom() {
+  const name = ($('#room-name')?.value || '').trim().slice(0, 24);
+  if (!name) { S.roomsUi.err = '방 이름을 적어 주세요.'; render(); return; }
+  S.roomsUi.busy = true; S.roomsUi.err = ''; render();
+  try {
+    const id = randCode(6);
+    const { error } = await sbClient.from('rr_rooms').insert({ id, name });
+    if (error) throw error;
+    rememberRoom({ id, name }); gotoRoom(id);
+  } catch (e) { console.error(e); S.roomsUi.busy = false; S.roomsUi.err = '방을 만들지 못했어요. 잠시 후 다시 시도해 주세요.'; render(); }
+}
+async function joinRoom() {
+  const code = ($('#room-code')?.value || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (!code) { S.roomsUi.err = '방 코드를 넣어 주세요.'; render(); return; }
+  S.roomsUi.busy = true; S.roomsUi.err = ''; render();
+  try {
+    const { data, error } = await sbClient.from('rr_rooms').select('id,name').eq('id', code).maybeSingle();
+    if (error) throw error;
+    if (!data) { S.roomsUi.busy = false; S.roomsUi.err = '그 코드의 방이 없어요. 다시 확인해 주세요.'; render(); return; }
+    rememberRoom(data); gotoRoom(data.id);
+  } catch (e) { console.error(e); S.roomsUi.busy = false; S.roomsUi.err = '확인하지 못했어요. 잠시 후 다시 시도해 주세요.'; render(); }
+}
 const sessionSubs = new Map();
 const walkers = new Map();
 const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -437,50 +512,52 @@ function charSvg(animal) {
 }
 function hash(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; }
 // ---------- stores ----------
-function makeSupabaseStore(sb, uid) {
+function makeSupabaseStore(sb, uid, roomId) {
+  const rid = roomId + ':' + uid;
   const readerCbs = [], sessCbs = new Map();
   let readersCache = [], sessionsCache = [];
   const rowToReader = r => ({ animal: r.animal, nickname: r.nickname, status: r.status, startedAt: r.started_at, accum: r.accum, sessionStartedAt: r.session_started_at, updatedAt: r.updated_at });
   async function loadReaders() {
-    const { data, error } = await sb.from('rr_readers').select('*');
+    const { data, error } = await sb.from('rr_readers').select('*').eq('room_id', roomId);
     if (error) { console.error(error); return; }
     readersCache = data.map(r => [r.id, rowToReader(r)]);
     readerCbs.forEach(cb => cb(readersCache));
   }
   async function loadSessions() {
-    const { data, error } = await sb.from('rr_sessions').select('*').order('ended_at', { ascending: false }).limit(2000);
+    const { data, error } = await sb.from('rr_sessions').select('*').eq('room_id', roomId).order('ended_at', { ascending: false }).limit(2000);
     if (error) { console.error(error); return; }
     sessionsCache = data.map(r => ({ id: r.id, readerId: r.reader_id, startedAt: r.started_at, endedAt: r.ended_at, seconds: r.seconds, title: r.title || '', note: r.note || '', coverUrl: r.cover_url || '' }));
     for (const [id, cb] of sessCbs) cb(sessionsCache.filter(x => x.readerId === id));
   }
   // live updates: realtime when enabled on the tables, plus a slow poll as a fallback
-  sb.channel('rr-changes')
+  sb.channel('rr-changes-' + roomId)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'rr_readers' }, () => loadReaders())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'rr_sessions' }, () => loadSessions())
     .subscribe();
   setInterval(() => { loadReaders(); loadSessions(); }, 20000);
   return {
     kind: 'supabase',
-    async readerExists(id) { const { data, error } = await sb.from('rr_readers').select('id').eq('id', id).maybeSingle(); if (error) throw error; return !!data; },
+    me: rid,
+    async readerExists(uidCode) { const { data, error } = await sb.from('rr_readers').select('id').like('id', '%:' + uidCode).limit(1); if (error) throw error; return !!(data && data.length); },
     subscribeReaders(cb) { readerCbs.push(cb); loadReaders(); return () => {}; },
     subscribeSessions(id, cb) { sessCbs.set(id, cb); cb(sessionsCache.filter(x => x.readerId === id)); if (sessCbs.size === 1) loadSessions(); return () => sessCbs.delete(id); },
     async setReader(d) {
-      const { error } = await sb.from('rr_readers').upsert({ id: uid, animal: d.animal, nickname: d.nickname, status: d.status, started_at: d.startedAt, accum: d.accum, session_started_at: d.sessionStartedAt, updated_at: d.updatedAt });
+      const { error } = await sb.from('rr_readers').upsert({ id: rid, room_id: roomId, animal: d.animal, nickname: d.nickname, status: d.status, started_at: d.startedAt, accum: d.accum, session_started_at: d.sessionStartedAt, updated_at: d.updatedAt });
       if (error) throw error; await loadReaders();
     },
     async updateReader(p) {
       const row = {};
       if ('status' in p) row.status = p.status; if ('startedAt' in p) row.started_at = p.startedAt; if ('accum' in p) row.accum = p.accum;
       if ('sessionStartedAt' in p) row.session_started_at = p.sessionStartedAt; if ('updatedAt' in p) row.updated_at = p.updatedAt;
-      const { error } = await sb.from('rr_readers').update(row).eq('id', uid);
+      const { error } = await sb.from('rr_readers').update(row).eq('id', rid);
       if (error) throw error; await loadReaders();
     },
     async addSession(d) {
-      const { error } = await sb.from('rr_sessions').insert({ reader_id: uid, started_at: d.startedAt, ended_at: d.endedAt, seconds: d.seconds, title: d.title, note: d.note, cover_url: d.coverUrl || null });
+      const { error } = await sb.from('rr_sessions').insert({ reader_id: rid, room_id: roomId, started_at: d.startedAt, ended_at: d.endedAt, seconds: d.seconds, title: d.title, note: d.note, cover_url: d.coverUrl || null });
       if (error) throw error; await loadSessions();
     },
     async deleteSession(id) {
-      const { error } = await sb.from('rr_sessions').delete().eq('id', id).eq('reader_id', uid);
+      const { error } = await sb.from('rr_sessions').delete().eq('id', id).eq('reader_id', rid);
       if (error) throw error;
       await loadSessions();
     },
@@ -514,9 +591,19 @@ async function boot() {
     try { sb = window.supabase.createClient(cfg.url, cfg.anonKey); } catch (e) { console.error(e); }
   }
   if (sb) {
-    try { uid = localStorage.getItem('rr.uid'); if (!uid) { uid = 'u_' + Array.from(crypto.getRandomValues(new Uint8Array(8)), b => 'abcdefghjkmnpqrstuvwxyz23456789'[b % 31]).join(''); localStorage.setItem('rr.uid', uid); } } catch (e) { uid = 'u_' + Math.random().toString(36).slice(2, 12); }
-    S.me = uid;
-    store = makeSupabaseStore(sb, uid);
+    try { uid = localStorage.getItem('rr.uid'); if (!uid) { uid = 'u_' + randCode(8); localStorage.setItem('rr.uid', uid); } } catch (e) { uid = 'u_' + Math.random().toString(36).slice(2, 12); }
+    sbClient = sb;
+    const roomId = (new URL(location.href).searchParams.get('room') || '').trim().toLowerCase();
+    if (!roomId) {
+      // no room in the link: first-time devices go straight to the first room, others pick from their list
+      if (!rememberedRooms().length) { const u = new URL(location.href); u.searchParams.set('room', 'home'); location.replace(u.toString()); return; }
+      S.phase = 'rooms'; render(); return;
+    }
+    const { data: roomRow } = await sb.from('rr_rooms').select('id,name').eq('id', roomId).maybeSingle();
+    if (!roomRow) { S.phase = 'rooms'; S.roomsUi.err = '"' + roomId + '" 방을 찾지 못했어요. 코드를 다시 확인해 주세요.'; render(); return; }
+    S.room = roomRow; rememberRoom(roomRow);
+    store = makeSupabaseStore(sb, uid, roomRow.id);
+    S.me = store.me;
   } else {
     S.me = 'local';
     store = makeLocalStore();
@@ -535,7 +622,7 @@ async function boot() {
 
   if (sb) {
     S.roomOk = true;
-    const ch = sb.channel('rr-room', { config: { presence: { key: S.me }, broadcast: { self: true } } });
+    const ch = sb.channel('rr-room-' + S.room.id, { config: { presence: { key: S.me }, broadcast: { self: true } } });
     roomCh = ch;
     ch.on('broadcast', { event: 'chat' }, ({ payload }) => {
       if (!payload || typeof payload.text !== 'string' || typeof payload.uid !== 'string') return;
@@ -657,6 +744,7 @@ async function sendChat() {
   } else pushChat({ ...m, at: Date.now() });
   setTimeout(() => $('#chat-input')?.focus(), 30);
 }
+function myCode() { return String(S.me || '').split(':').pop().replace(/^u_/, ''); }
 async function adoptCode() {
   const code = (S.handoff.code || '').trim().toLowerCase().replace(/^u_/, '');
   if (!code) { S.handoff.err = '코드를 넣어 주세요.'; render(); return; }
@@ -743,12 +831,13 @@ function render() {
     ? { id: active.id, value: active.value, s: active.selectionStart, e: active.selectionEnd } : null;
   let body = '';
   if (S.phase === 'loading') body = `<div class="empty"><b>방에 들어가는 중</b>잠시만요.</div>`;
+  else if (S.phase === 'rooms') body = renderRooms();
   else if (S.phase === 'setup') body = renderSetup();
-  else body = S.tab === 'now' ? renderRoom() : renderLog();
+  else body = S.tab === 'now' ? renderRoom() : (S.person && S.readers.has(S.person) ? renderPerson() : renderLog());
   document.body.classList.toggle('scroll', !(S.phase === 'app' && S.tab === 'now'));
   app.innerHTML = `
     <header class="top">
-      <div class="brand">같이 읽는 방 ${S.phase === 'app' && S.roomOk && S.online.size > 0 ? `<small>${S.online.size}명 접속 중</small>` : ''}</div>
+      <div class="brand">${S.room && S.phase !== 'rooms' ? `<button type="button" class="roomsbtn" id="go-rooms" title="방 목록" aria-label="방 목록">${ICON.rooms}</button>${esc(S.room.name)}` : '같이 읽는 방'} ${S.phase === 'app' && S.roomOk && S.online.size > 0 ? `<small>${S.online.size}명 접속 중</small>` : ''}</div>
       ${S.phase === 'app' ? `<div class="icons" role="tablist">
         <button class="iconbtn" role="tab" data-tab="now" aria-selected="${S.tab === 'now'}" title="지금" aria-label="지금">${ICON.now}</button>
         <button class="iconbtn" role="tab" data-tab="log" aria-selected="${S.tab === 'log'}" title="기록" aria-label="기록">${ICON.log}</button>
@@ -758,7 +847,7 @@ function render() {
     ${S.storeNote ? `<div class="notice">${esc(S.storeNote)}</div>` : ''}
     ${body}
     ${S.modal ? renderModal() : ''}
-    ${S.bookOpen ? renderBookSheet() : ''}`;
+`;
   bind();
   if (keep) {
     const el = document.getElementById(keep.id);
@@ -769,12 +858,50 @@ function render() {
     }
   }
 }
+function renderRooms() {
+  const rooms = rememberedRooms();
+  const ui = S.roomsUi;
+  return `<section class="rooms">
+    <h1>내 방</h1>
+    <p class="lead">방마다 캐릭터와 기록이 따로예요. 링크를 공유하면 친구가 그 방으로 들어옵니다.</p>
+    ${rooms.length ? `<ul class="room-list">${rooms.map(r => `<li class="room-item">
+      <button type="button" class="room-go" data-room="${esc(r.id)}"><b>${esc(r.name)}</b><small>코드 ${esc(r.id)}</small></button>
+      <button type="button" class="mini" data-copy-room="${esc(r.id)}">링크 복사</button>
+      <button type="button" class="mini ghost" data-forget-room="${esc(r.id)}" aria-label="목록에서 빼기">✕</button>
+    </li>`).join('')}</ul>` : `<div class="none">아직 들어가 본 방이 없어요.</div>`}
+    <div class="room-actions">
+      ${ui.creating ? `<div class="field"><label for="room-name">새 방 이름</label><div class="code-row"><input id="room-name" maxlength="24" placeholder="예: 자매방" autocomplete="off"><button type="button" class="btn primary" id="room-create" ${ui.busy ? 'disabled' : ''}>${ui.busy ? '만드는 중…' : '만들기'}</button></div></div>`
+        : `<button type="button" class="btn primary" id="room-new">새 방 만들기</button>`}
+      <div class="field"><label for="room-code">코드로 들어가기</label><div class="code-row"><input id="room-code" maxlength="12" placeholder="친구가 알려준 방 코드" autocapitalize="none" autocomplete="off"><button type="button" class="btn" id="room-join" ${ui.busy ? 'disabled' : ''}>입장</button></div></div>
+      ${ui.err ? `<p class="err">${esc(ui.err)}</p>` : ''}
+    </div>
+  </section>`;
+}
+function renderPerson() {
+  const id = S.person, r = S.readers.get(id), list = S.sessions.get(id) || [];
+  const mine = id === S.me;
+  const total = list.reduce((a, x) => a + (x.seconds || 0), 0);
+  return `<section class="person">
+    <div class="p-head"><button type="button" class="back" id="person-back" aria-label="책장으로">←</button><div class="av">${charSvg(r.animal)}</div><div class="who"><div class="n">${esc(r.nickname || '이름 없음')}${mine ? '<small>나</small>' : ''}</div>${total ? `<div class="tot">${fmtDur(total)}</div>` : ''}</div></div>
+    ${list.length ? `<ol class="timeline">${list.map(sess => {
+      const confirming = S.confirmDel === sess.id;
+      return `<li class="tl">
+        <div class="tl-date">${fmtWhen(sess.endedAt)}</div>
+        <div class="tl-card ${mine ? 'mine' : ''}">
+          ${sess.coverUrl ? `<img class="tl-cover" src="${esc(sess.coverUrl)}" alt="">` : `<span class="tl-cover none"></span>`}
+          <div class="tl-body"><div class="tl-title ${sess.title ? '' : 'un'}">${sess.title ? esc(sess.title) : '제목 없음'}</div>${sess.note ? `<div class="tl-note">${esc(sess.note)}</div>` : ''}
+            ${confirming ? `<div class="cf">이 기록을 지울까요? <button type="button" class="yes" data-del-yes="${esc(sess.id)}">네</button><button type="button" data-del-no="1">아니오</button></div>` : ''}</div>
+          ${mine && !confirming ? `<button type="button" class="x" data-del="${esc(sess.id)}" aria-label="이 기록 지우기">×</button>` : ''}
+        </div>
+      </li>`; }).join('')}</ol>` : `<div class="none">아직 기록이 없어요.</div>`}
+  </section>`;
+}
 function renderSetup() {
   const r = myReader();
   if (!S.setupAnimal) { S.setupAnimal = r?.animal || null; try { S.setupAnimal = S.setupAnimal || localStorage.getItem('rr.lastAnimal'); } catch (e) {} }
   return `<section class="setup">
     <h1>${r ? '프로필 바꾸기' : '어떤 모습으로 들어갈까요?'}</h1>
-    <p class="lead">캐릭터 하나와 닉네임을 정하면 방에 들어갈 수 있어요.</p>
+    <p class="lead">${S.room ? '"' + esc(S.room.name) + '"에서 쓸 ' : ''}캐릭터 하나와 닉네임을 정하면 방에 들어갈 수 있어요.</p>
     <div class="animal-grid" role="group" aria-label="캐릭터 고르기">
       ${ANIMALS.map(([k, n]) => `<button type="button" class="animal-pick" data-animal="${k}" aria-pressed="${S.setupAnimal === k}">${charSvg(k)}<span>${n}</span></button>`).join('')}
     </div>
@@ -784,7 +911,7 @@ function renderSetup() {
       <button class="btn primary" id="setup-save" ${S.setupAnimal ? '' : 'disabled'}>${r ? '저장' : '입장하기'}</button>
     </div>
     ${store && store.kind === 'supabase' ? (r ? `<div class="handoff">
-      <div class="hd">이어쓰기 코드 <b id="my-code">${esc(S.me.replace(/^u_/, ''))}</b> <button type="button" class="mini" id="copy-code">복사</button></div>
+      <div class="hd">이어쓰기 코드 <b id="my-code">${esc(myCode())}</b> <button type="button" class="mini" id="copy-code">복사</button></div>
       <p>다른 폰이나 홈 화면 앱에서 처음 열 때 이 코드를 넣으면 같은 캐릭터와 기록을 이어서 써요.</p>
     </div>` : `<div class="handoff">
       ${S.handoff.open ? `<div class="hd">이어쓰기 코드</div>
@@ -867,24 +994,11 @@ function renderLog() {
     const total = list.reduce((a, s) => a + (s.seconds || 0), 0);
     const mine = id === S.me;
     const books = groupBooks(list).reverse();  // oldest first: the shelf fills left to right
-    return `<article class="shelf-card">
+    return `<article class="shelf-card" data-person="${esc(id)}" role="button" tabindex="0">
       <div class="sh-head"><div class="av">${charSvg(r.animal)}</div><div class="who"><div class="n">${esc(r.nickname || '이름 없음')}${mine ? '<small>나</small>' : ''}</div>${total ? `<div class="tot">${fmtDur(total)}</div>` : ''}</div></div>
-      <div class="shelf">${books.map(g => `<button type="button" class="bk" data-book="${esc(id)}|${esc(g.key)}" title="${esc(g.title || '제목 없음')}">${g.cover ? `<img src="${esc(g.cover)}" alt="${esc(g.title)}" loading="lazy">` : `<span class="spine"><span>${esc(g.title || '제목 없음')}</span></span>`}</button>`).join('')}</div>
+      <div class="shelf">${books.map(g => `<span class="bk" title="${esc(g.title || '제목 없음')}">${g.cover ? `<img src="${esc(g.cover)}" alt="${esc(g.title)}" loading="lazy">` : `<span class="spine"><span>${esc(g.title || '제목 없음')}</span></span>`}</span>`).join('')}</div>
     </article>`;
   }).join('')}</section>`;
-}
-function renderBookSheet() {
-  const { uid, key } = S.bookOpen;
-  const r = S.readers.get(uid); const list = S.sessions.get(uid) || [];
-  const g = groupBooks(list).find(x => x.key === key);
-  if (!r || !g) { S.bookOpen = null; return ''; }
-  const mine = uid === S.me;
-  return `<div class="overlay" id="book-overlay">
-    <div class="sheet book-sheet">
-      <div class="bs-head">${g.cover ? `<img class="cover-md" src="${esc(g.cover)}" alt="">` : ''}<div class="bs-t"><h3>${esc(g.title || '제목 없음')}</h3><div class="sum">${esc(r.nickname || '')}${mine ? ' (나)' : ''}</div></div><button type="button" class="x-close" id="book-close" aria-label="닫기">✕</button></div>
-      <div class="cluster">${g.items.map(sess => bubble(sess, mine, false)).join('')}</div>
-    </div>
-  </div>`;
 }
 function recentTitles() {
   const seen = new Set(), out = [];
@@ -945,9 +1059,18 @@ function bind() {
   const app = $('#app');
   app.querySelectorAll('.animal-pick').forEach(b => b.addEventListener('click', () => { S.setupAnimal = b.dataset.animal; render(); }));
   $('#setup-save')?.addEventListener('click', saveProfile);
+  $('#go-rooms')?.addEventListener('click', () => { const u = new URL(location.href); u.search = ''; location.href = u.toString(); });
+  app.querySelectorAll('[data-room]').forEach(b => b.addEventListener('click', () => gotoRoom(b.dataset.room)));
+  app.querySelectorAll('[data-copy-room]').forEach(b => b.addEventListener('click', async () => { const link = roomLink(b.dataset.copyRoom); try { await navigator.clipboard.writeText(link); b.textContent = '복사됨'; } catch (e) { b.textContent = link; } }));
+  app.querySelectorAll('[data-forget-room]').forEach(b => b.addEventListener('click', () => { forgetRoom(b.dataset.forgetRoom); render(); }));
+  $('#room-new')?.addEventListener('click', () => { S.roomsUi.creating = true; S.roomsUi.err = ''; render(); setTimeout(() => $('#room-name')?.focus(), 30); });
+  $('#room-create')?.addEventListener('click', createRoom);
+  $('#room-name')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); createRoom(); } });
+  $('#room-join')?.addEventListener('click', joinRoom);
+  $('#room-code')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); joinRoom(); } });
   $('#nick')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveProfile(); } });
   $('#setup-cancel')?.addEventListener('click', () => { S.phase = 'app'; render(); });
-  $('#copy-code')?.addEventListener('click', async () => { const code = S.me.replace(/^u_/, ''); try { await navigator.clipboard.writeText(code); $('#copy-code').textContent = '복사됨'; } catch (e) { const r = document.createRange(); r.selectNodeContents($('#my-code')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } });
+  $('#copy-code')?.addEventListener('click', async () => { const code = myCode(); try { await navigator.clipboard.writeText(code); $('#copy-code').textContent = '복사됨'; } catch (e) { const r = document.createRange(); r.selectNodeContents($('#my-code')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } });
   $('#handoff-open')?.addEventListener('click', () => { S.handoff.open = true; render(); setTimeout(() => $('#handoff-code')?.focus(), 30); });
   $('#handoff-code')?.addEventListener('input', e => { S.handoff.code = e.target.value; });
   $('#handoff-code')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); adoptCode(); } });
@@ -958,15 +1081,14 @@ function bind() {
   $('#chat-form')?.addEventListener('submit', e => { e.preventDefault(); sendChat(); });
   const box = $('#chat-box'); if (box) box.scrollTop = box.scrollHeight;
   $('#edit-profile')?.addEventListener('click', () => { S.setupAnimal = myReader()?.animal || null; S.phase = 'setup'; render(); });
-  app.querySelectorAll('[data-tab]').forEach(t => t.addEventListener('click', () => { S.tab = t.dataset.tab; try { localStorage.setItem('rr.tab', S.tab); } catch (e) {} render(); }));
+  app.querySelectorAll('[data-tab]').forEach(t => t.addEventListener('click', () => { S.tab = t.dataset.tab; S.person = null; try { localStorage.setItem('rr.tab', S.tab); } catch (e) {} render(); }));
   app.querySelectorAll('[data-book="1"]').forEach(b => b.addEventListener('click', () => {
     const r = myReader(); if (!r) return;
     if (r.status === 'idle') startReading(); else stopReading();
   }));
   app.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', () => ({ pause: pauseReading, resume: resumeReading, stop: stopReading })[b.dataset.act]()));
-  app.querySelectorAll('[data-book]').forEach(b => b.addEventListener('click', () => { const [uid, key] = b.dataset.book.split('|'); S.bookOpen = { uid, key }; render(); }));
-  $('#book-close')?.addEventListener('click', () => { S.bookOpen = null; render(); });
-  $('#book-overlay')?.addEventListener('click', e => { if (e.target.id === 'book-overlay') { S.bookOpen = null; render(); } });
+  app.querySelectorAll('[data-person]').forEach(c => { const open = () => { S.person = c.dataset.person; S.confirmDel = null; render(); window.scrollTo(0, 0); }; c.addEventListener('click', open); c.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } }); });
+  $('#person-back')?.addEventListener('click', () => { S.person = null; S.confirmDel = null; render(); });
   $('#finish-form')?.addEventListener('submit', e => { e.preventDefault(); finishSession(); });
   $('#finish-cancel')?.addEventListener('click', cancelStop);
   $('#finish-discard')?.addEventListener('click', discardSession);
