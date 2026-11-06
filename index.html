@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<script>window.APP_VERSION = "20261106163755";</script>
+<script>window.APP_VERSION = "20261106211419";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -151,7 +151,7 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .sprite .book.on.mine:hover { opacity: 1; }
 .sprite .book:not(.mine) { cursor: default; }
 .sprite .seat { position: relative; width: 78px; height: 86px; }
-.sprite .seat .chair { position: absolute; left: -11px; bottom: -6px; width: 100px; height: 84px; color: var(--ink); }
+.sprite .seat .chair { position: absolute; left: -28px; bottom: -6px; width: 134px; height: 84px; color: var(--ink); }
 .sprite .body { position: relative; width: 78px; height: 86px; transform: translateY(var(--bob)) scaleX(var(--face)); transform-origin: 50% 100%; }
 .sprite .body .glasses { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; color: var(--ink); }
 .sprite.reading .body, .sprite .seat .chair ~ .body { --face: 1; }
@@ -210,13 +210,12 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .sh-head .n { font-size: 17px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sh-head .n small { font-size: 11px; color: var(--ink-soft); margin-left: 3px; }
 .sh-head .tot { font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
-.shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px 5px; padding: 4px 6px 6px; min-height: 76px; box-sizing: content-box;
-  background: repeating-linear-gradient(to bottom, transparent 0, transparent 66px, var(--ink) 66px, var(--ink) 68px, transparent 68px, transparent 72px); background-origin: content-box; background-clip: content-box; }
-.shelf:empty { min-height: 68px; }
-.bk { height: 66px; padding: 0; border: 0; background: none; display: block; }
-.bk img { height: 66px; width: 46px; object-fit: cover; display: block; border: 1.5px solid var(--ink); border-radius: 2px 4px 4px 2px; background: var(--paper); }
-.bk .spine { display: flex; align-items: center; justify-content: center; height: 66px; width: 22px; border: 1.5px solid var(--ink); border-radius: 3px; background: var(--accent); writing-mode: vertical-rl; font-size: 11px; line-height: 1; padding: 4px 0; overflow: hidden; color: var(--accent-ink); }
-.bk .spine span { max-height: 56px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shelf { display: flex; flex-wrap: wrap; align-content: flex-start; align-items: flex-start; gap: 6px 5px; padding: 4px 6px 6px; min-height: 58px; max-height: 186px; overflow: hidden; box-sizing: content-box;
+  background: repeating-linear-gradient(to bottom, transparent 0, transparent 58px, var(--ink) 58px, var(--ink) 60px, transparent 60px, transparent 64px); background-size: 100% 64px; background-repeat: repeat-y; background-origin: content-box; background-clip: padding-box; }
+.bk { height: 58px; padding: 0; border: 0; background: none; display: block; flex: none; }
+.bk img { height: 58px; width: 40px; box-sizing: border-box; object-fit: cover; display: block; border: 1.5px solid var(--ink); border-radius: 2px 4px 4px 2px; background: var(--paper); }
+.bk .spine { display: flex; align-items: center; justify-content: center; height: 58px; width: 20px; border: 1.5px solid var(--ink); border-radius: 3px; background: var(--accent); writing-mode: vertical-rl; font-size: 11px; line-height: 1; padding: 3px 0; overflow: hidden; color: var(--accent-ink); box-sizing: border-box; }
+.bk .spine span { max-height: 50px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cluster { display: flex; flex-direction: column; gap: 3px; }
 .cluster .bub:not(:first-child)::before { display: none; }
 .cluster .bub:first-child:not(:last-child) { border-radius: 16px 16px 14px 6px; }
@@ -429,7 +428,7 @@ function glassesSvg(animal) {
   const r = Math.min(7, (x2 - x1) / 2 - 1.5);
   return `<svg class="glasses" viewBox="0 0 100 110" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="${x1}" cy="${y}" r="${r}"/><circle cx="${x2}" cy="${y}" r="${r}"/><path d="M${x1 + r} ${y} h${x2 - x1 - 2 * r}"/><path d="M${x1 - r} ${y} l-7 -2 M${x2 + r} ${y} l7 -2"/></g></svg>`;
 }
-const CHAIR_SVG = '<svg class="chair" viewBox="0 0 120 100" aria-hidden="true"><g fill="var(--accent)" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 20 q0 -10 10 -10 h56 q10 0 10 10 v38 h-76 z"/><path d="M10 52 q0 -8 8 -8 h84 q8 0 8 8 v22 q0 6 -6 6 h-88 q-6 0 -6 -6 z"/><path d="M18 80 v12 M102 80 v12" fill="none"/></g></svg>';
+const CHAIR_SVG = '<svg class="chair" viewBox="0 0 160 100" aria-hidden="true"><g fill="var(--accent)" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16 q0 -10 10 -10 h96 q10 0 10 10 v36 h-116 z"/><path d="M20 46 q0 -6 6 -6 h108 q6 0 6 6 v26 h-120 z"/><path d="M4 40 q0 -8 8 -8 h12 q8 0 8 8 v40 h-28 z"/><path d="M128 40 q0 -8 8 -8 h12 q8 0 8 8 v40 h-28 z"/><path d="M4 72 h152 v8 q0 6 -6 6 h-140 q-6 0 -6 -6 z"/><path d="M18 86 v10 M142 86 v10" fill="none"/></g></svg>';
 const ICON = {
   now: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M10 20v-5h4v5"/></svg>',
   log: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M5 20V5h3v15M10 20V8h3v12M15 20l2.5-11 3 .7L18 20"/></svg>',
@@ -493,7 +492,7 @@ async function joinRoom() {
 const sessionSubs = new Map();
 const walkers = new Map();
 const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const SPRITE_W = 110, SPRITE_H = 170, MIN_GAP = 118;
+const SPRITE_W = 110, SPRITE_H = 170, MIN_GAP = 140;
 const BOOK_API = 'https://hanjul-khaki.vercel.app/api/public/books';
 
 try { S.tab = localStorage.getItem('rr.tab') === 'log' ? 'log' : 'now'; } catch (e) {}
@@ -843,6 +842,7 @@ function step(ts) {
 // ---------- render ----------
 function render() {
   const app = $('#app');
+  if (S.composing) { S.renderPending = true; return; }
   const active = document.activeElement;
   const keep = active && active.id && app.contains(active) && 'value' in active
     ? { id: active.id, value: active.value, s: active.selectionStart, e: active.selectionEnd } : null;
@@ -1007,7 +1007,7 @@ function renderLog() {
     const list = S.sessions.get(id) || [];
     const total = list.reduce((a, s) => a + (s.seconds || 0), 0);
     const mine = id === S.me;
-    const books = groupBooks(list).reverse();  // oldest first: the shelf fills left to right
+    const books = groupBooks(list).slice(0, 9).reverse();  // newest 9 books, oldest on the left
     return `<article class="shelf-card" data-person="${esc(id)}" role="button" tabindex="0">
       <div class="sh-head"><div class="av">${charSvg(r.animal)}</div><div class="who"><div class="n">${esc(r.nickname || '이름 없음')}${mine ? '<small>나</small>' : ''}</div>${total ? `<div class="tot">${fmtDur(total)}</div>` : ''}</div></div>
       <div class="shelf">${books.map(g => `<span class="bk" title="${esc(g.title || '제목 없음')}">${g.cover ? `<img src="${esc(g.cover)}" alt="${esc(g.title)}" loading="lazy">` : `<span class="spine"><span>${esc(g.title || '제목 없음')}</span></span>`}</span>`).join('')}</div>
@@ -1024,24 +1024,39 @@ function recentTitles() {
   }
   return out;
 }
+function suggestHtml(m) {
+  if (m.hits.length) return `<div class="suggest">${m.hits.map((h, i) => `<button type="button" class="hit" data-hit="${i}">${h.thumbnail ? `<img src="${esc(h.thumbnail)}" alt="">` : '<span class="nocover"></span>'}<span class="ht"><b>${esc(h.title)}</b><small>${esc((h.authors || []).join(', '))}${h.publisher ? ' · ' + esc(h.publisher) : ''}</small></span></button>`).join('')}</div>`;
+  return m.searching ? `<div class="searching">표지 찾는 중…</div>` : '';
+}
+// Re-draw only the suggestion box: a full render() while typing resets the input and breaks Korean IME composition.
+function renderSuggest() {
+  const w = $('.suggest-wrap'); if (!w || !S.modal) return;
+  w.innerHTML = suggestHtml(S.modal);
+  w.querySelectorAll('[data-hit]').forEach(b => b.addEventListener('click', () => pickHit(+b.dataset.hit)));
+}
 let searchTimer = null, searchSeq = 0;
 function searchBooks(q) {
   clearTimeout(searchTimer);
   const m = S.modal; if (!m) return;
   q = q.trim();
-  if (q.length < 1) { m.hits = []; m.searching = false; render(); return; }
+  if (q.length < 1) { searchSeq++; m.hits = []; m.searching = false; renderSuggest(); return; }
   searchTimer = setTimeout(async () => {
     const seq = ++searchSeq;
-    m.searching = true; render();
+    m.searching = true; renderSuggest();
     try {
       const r = await fetch(BOOK_API + '?q=' + encodeURIComponent(q));
       const data = r.ok ? await r.json() : { hits: [] };
       if (seq !== searchSeq || !S.modal) return;
-      S.modal.hits = (data.hits || []).slice(0, 5).map(h => ({ ...h, thumbnail: (h.thumbnail || '').replace(/^http:/, 'https:') }));
+      const seen = new Set();
+      S.modal.hits = (data.hits || []).filter(h => { const k = (h.title || '').trim() + '|' + (h.authors || []).join(','); if (seen.has(k)) return false; seen.add(k); return true; })
+        .slice(0, 5).map(h => ({ ...h, thumbnail: (h.thumbnail || '').replace(/^http:/, 'https:') }));
     } catch (e) { if (S.modal) S.modal.hits = []; }
-    if (S.modal) { S.modal.searching = false; render(); }
+    if (S.modal) { S.modal.searching = false; renderSuggest(); }
   }, 350);
 }
+// Any other render (friend status, poll) waits until the IME composition ends.
+document.addEventListener('compositionstart', () => { S.composing = true; });
+document.addEventListener('compositionend', () => { S.composing = false; if (S.renderPending) { S.renderPending = false; render(); } });
 function pickHit(i) {
   const m = S.modal; const h = m && m.hits[i]; if (!h) return;
   m.title = h.title; m.cover = h.thumbnail || ''; m.hits = []; m.searching = false; m.err = '';
@@ -1056,7 +1071,7 @@ function renderModal() {
       <div class="sum">이번에 <b>${fmtClock(m.seconds * 1000)}</b> 읽었어요. 무슨 책이었나요?</div>
       <div class="field"><label for="s-title">책 제목 <i>*</i></label>
         <div class="title-row">${m.cover ? `<img class="cover-sm" src="${esc(m.cover)}" alt="">` : ''}<input id="s-title" maxlength="80" placeholder="제목을 적으면 표지를 찾아줘요" value="${esc(m.title)}" required autocomplete="off"></div>
-        ${m.hits.length ? `<div class="suggest">${m.hits.map((h, i) => `<button type="button" class="hit" data-hit="${i}">${h.thumbnail ? `<img src="${esc(h.thumbnail)}" alt="">` : '<span class="nocover"></span>'}<span class="ht"><b>${esc(h.title)}</b><small>${esc((h.authors || []).join(', '))}${h.publisher ? ' · ' + esc(h.publisher) : ''}</small></span></button>`).join('')}</div>` : (m.searching ? `<div class="searching">표지 찾는 중…</div>` : '')}
+        <div class="suggest-wrap">${suggestHtml(m)}</div>
         ${recentTitles().length ? `<div class="chips" aria-label="전에 적은 제목">${recentTitles().map(t => `<button type="button" class="chip ${m.title.trim() === t.title ? 'on' : ''}" data-title="${esc(t.title)}" data-cover="${esc(t.cover)}">${esc(t.title)}</button>`).join('')}</div>` : ''}
       </div>
       <div class="field"><label for="s-note">한 줄 소감 <span style="color:var(--ink-soft)">(건너뛰어도 돼요)</span></label><textarea id="s-note" maxlength="300" placeholder="오늘 읽으면서 든 생각 한 줄">${esc(m.note)}</textarea></div>
