@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<script>window.APP_VERSION = "20261106155951";</script>
+<script>window.APP_VERSION = "20261106160648";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -142,38 +142,57 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 @keyframes msgin { from { opacity: 0; transform: translateY(-6px) } to { opacity: 1; transform: none } }
 @media (prefers-reduced-motion: reduce) { .msg { animation: none; } }
 
-/* ----- records ----- */
-.log { padding-block: 8px 24px; display: flex; flex-direction: column; gap: 22px; }
-.rec { display: grid; grid-template-columns: 56px 1fr; column-gap: 10px; min-width: 0; }
-.rec .av { width: 56px; height: 60px; }
-.rec .av svg { width: 100%; height: 100%; display: block; }
-.rec .who { display: flex; align-items: baseline; gap: 8px; min-width: 0; margin-bottom: 6px; }
-.rec .who .n { font-size: 20px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rec .who .n small { font-size: 12px; color: var(--ink-soft); margin-left: 3px; }
-.rec .who .tot { font-size: 14px; color: var(--ink-soft); white-space: nowrap; font-variant-numeric: tabular-nums; }
-.rec .col { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-.rec .none { font-size: 14px; color: var(--ink-soft); padding-top: 4px; }
-.bub { position: relative; border: 1.5px solid var(--ink); border-radius: 16px; padding: 9px 12px 9px; min-width: 0; background: var(--paper); }
-.bub::before { content: ""; position: absolute; left: -9px; top: 16px; width: 12px; height: 12px; background: var(--paper); border-left: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); transform: rotate(45deg); }
-.bub .top { display: flex; align-items: baseline; gap: 8px; }
-.bub .top .t { font-size: 18px; line-height: 1.25; flex: 1; min-width: 0; overflow-wrap: anywhere; }
-.bub .top .t.un { color: var(--ink-soft); }
-.bub .top .t.un { color: var(--ink-soft); }
-.bub .blank { font-size: 14px; color: var(--ink-soft); }
-.bub .note { font-size: 16.5px; line-height: 1.35; overflow-wrap: anywhere; margin-top: 2px; }
+/* ----- records: one bookshelf per person, two across ----- */
+.shelves { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-block: 8px 24px; }
+.shelf-card { border: 1.5px solid var(--ink); border-radius: 14px; padding: 10px 10px 8px; min-width: 0; }
+.sh-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.sh-head .av { width: 34px; height: 38px; flex: none; }
+.sh-head .av svg { width: 100%; height: 100%; display: block; }
+.sh-head .who { min-width: 0; }
+.sh-head .n { font-size: 17px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sh-head .n small { font-size: 11px; color: var(--ink-soft); margin-left: 3px; }
+.sh-head .tot { font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px 5px; padding: 4px 4px 0; min-height: 72px;
+  background: repeating-linear-gradient(to bottom, transparent 0, transparent 70px, var(--ink) 70px, var(--ink) 72px); background-origin: content-box; }
+.bk { height: 66px; padding: 0; border: 0; background: none; display: block; }
+.bk img { height: 66px; width: 46px; object-fit: cover; display: block; border: 1.5px solid var(--ink); border-radius: 2px 4px 4px 2px; background: var(--paper); }
+.bk .spine { display: flex; align-items: center; justify-content: center; height: 66px; width: 22px; border: 1.5px solid var(--ink); border-radius: 3px; background: var(--accent); writing-mode: vertical-rl; font-size: 11px; line-height: 1; padding: 4px 0; overflow: hidden; color: var(--accent-ink); }
+.bk .spine span { max-height: 56px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cluster { display: flex; flex-direction: column; gap: 3px; }
 .cluster .bub:not(:first-child)::before { display: none; }
 .cluster .bub:first-child:not(:last-child) { border-radius: 16px 16px 14px 6px; }
 .cluster .bub:not(:first-child):not(:last-child) { border-radius: 6px 14px 14px 6px; }
 .cluster .bub:last-child:not(:first-child) { border-radius: 6px 14px 16px 16px; }
+.bub { position: relative; border: 1.5px solid var(--ink); border-radius: 16px; padding: 9px 12px 9px; min-width: 0; background: var(--paper); }
+.bub::before { content: ""; position: absolute; left: -9px; top: 16px; width: 12px; height: 12px; background: var(--paper); border-left: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); transform: rotate(45deg); }
+.book-sheet .bub::before { display: none; }
+.bub .top { display: flex; align-items: baseline; gap: 8px; }
+.bub .top .t { font-size: 18px; line-height: 1.25; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.bub .top .t.un { color: var(--ink-soft); }
+.bub .blank { font-size: 14px; color: var(--ink-soft); }
+.bub .note { font-size: 16.5px; line-height: 1.35; overflow-wrap: anywhere; margin-top: 2px; }
 .bub .x { position: absolute; top: 6px; right: 8px; background: none; border: 0; color: var(--ink-soft); font-size: 16px; line-height: 1; padding: 2px 4px; }
 .bub .x:hover { color: var(--accent-deep); }
 .bub.mine .top { padding-right: 18px; }
 .bub .cf { margin-top: 6px; font-size: 13px; color: var(--ink-soft); display: flex; gap: 6px; align-items: center; }
 .bub .cf button { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; font-size: 13px; padding: 1px 9px; color: var(--ink); line-height: 1.4; }
 .bub .cf button.yes { border-color: var(--accent-deep); color: var(--accent-deep); }
-.more { align-self: flex-start; }
-.more button { background: none; border: 0; color: var(--ink-soft); font-size: 14px; text-decoration: underline; padding: 0 2px; }
+.book-sheet .bs-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.book-sheet .bs-t { flex: 1; min-width: 0; }
+.book-sheet h3 { margin: 0; }
+.cover-md { width: 54px; height: 78px; object-fit: cover; border: 1.5px solid var(--ink); border-radius: 2px 4px 4px 2px; flex: none; }
+.x-close { background: none; border: 0; color: var(--ink-soft); font-size: 18px; padding: 2px 6px; }
+.title-row { display: flex; gap: 8px; align-items: center; }
+.title-row input { flex: 1; min-width: 0; }
+.cover-sm { width: 34px; height: 48px; object-fit: cover; border: 1.5px solid var(--ink); border-radius: 2px 3px 3px 2px; flex: none; }
+.suggest { display: flex; flex-direction: column; border: 1.5px solid var(--line); border-radius: 12px; margin-top: 6px; overflow: hidden; }
+.hit { display: flex; align-items: center; gap: 10px; padding: 7px 10px; background: var(--paper); border: 0; border-bottom: 1px solid var(--line); text-align: left; }
+.hit:last-child { border-bottom: 0; }
+.hit img, .hit .nocover { width: 30px; height: 42px; object-fit: cover; flex: none; border: 1px solid var(--line); border-radius: 2px; background: var(--paper); }
+.hit .ht { min-width: 0; display: flex; flex-direction: column; }
+.hit .ht b { font-weight: 400; font-size: 16px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hit .ht small { font-size: 12px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.searching { font-size: 13px; color: var(--ink-soft); margin-top: 6px; }
 
 /* ----- finish sheet ----- */
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: flex-end; justify-content: center; z-index: 20; padding: 0 max(12px, env(safe-area-inset-left, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-right, 0px)); }
@@ -370,7 +389,7 @@ const S = {
   onlineRaw: new Set(),  // presence keys as the room reports them, registered or not
   roomOk: false,
   modal: null,            // {seconds, startedAt, endedAt, title, note, file, preview, err, saving}
-  expanded: new Set(),   // 'uid|title' groups opened fully
+  bookOpen: null,        // {uid, key}: a book's notes sheet
   confirmDel: null,      // session id awaiting delete confirmation
   setupAnimal: null,
   handoff: { open: false, code: '', err: '', busy: false },
@@ -381,7 +400,8 @@ let store = null, roomCh = null;
 const sessionSubs = new Map();
 const walkers = new Map();
 const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const SPRITE_W = 110, SPRITE_H = 170;
+const SPRITE_W = 110, SPRITE_H = 170, MIN_GAP = 118;
+const BOOK_API = 'https://hanjul-khaki.vercel.app/api/public/books';
 
 try { S.tab = localStorage.getItem('rr.tab') === 'log' ? 'log' : 'now'; } catch (e) {}
 
@@ -429,7 +449,7 @@ function makeSupabaseStore(sb, uid) {
   async function loadSessions() {
     const { data, error } = await sb.from('rr_sessions').select('*').order('ended_at', { ascending: false }).limit(2000);
     if (error) { console.error(error); return; }
-    sessionsCache = data.map(r => ({ id: r.id, readerId: r.reader_id, startedAt: r.started_at, endedAt: r.ended_at, seconds: r.seconds, title: r.title || '', note: r.note || '' }));
+    sessionsCache = data.map(r => ({ id: r.id, readerId: r.reader_id, startedAt: r.started_at, endedAt: r.ended_at, seconds: r.seconds, title: r.title || '', note: r.note || '', coverUrl: r.cover_url || '' }));
     for (const [id, cb] of sessCbs) cb(sessionsCache.filter(x => x.readerId === id));
   }
   // live updates: realtime when enabled on the tables, plus a slow poll as a fallback
@@ -455,7 +475,7 @@ function makeSupabaseStore(sb, uid) {
       if (error) throw error; await loadReaders();
     },
     async addSession(d) {
-      const { error } = await sb.from('rr_sessions').insert({ reader_id: uid, started_at: d.startedAt, ended_at: d.endedAt, seconds: d.seconds, title: d.title, note: d.note });
+      const { error } = await sb.from('rr_sessions').insert({ reader_id: uid, started_at: d.startedAt, ended_at: d.endedAt, seconds: d.seconds, title: d.title, note: d.note, cover_url: d.coverUrl || null });
       if (error) throw error; await loadSessions();
     },
     async deleteSession(id) {
@@ -584,7 +604,7 @@ function stopReading() {
   const r = myReader(); if (!r || r.status === 'idle') return;
   const now = Date.now();
   const ms = elapsedOf(r, now);
-  S.modal = { seconds: Math.max(1, Math.round(ms / 1000)), startedAt: r.sessionStartedAt || (now - ms), endedAt: now, title: '', note: '', err: '', saving: false };
+  S.modal = { seconds: Math.max(1, Math.round(ms / 1000)), startedAt: r.sessionStartedAt || (now - ms), endedAt: now, title: '', note: '', cover: '', hits: [], searching: false, err: '', saving: false };
   act(() => store.updateReader({ status: 'paused', accum: ms, startedAt: null, updatedAt: now }));
   render();
 }
@@ -596,7 +616,7 @@ function finishSession() {
   m.saving = true; m.err = ''; render();
   act(async () => {
     try {
-      await store.addSession({ startedAt: m.startedAt, endedAt: m.endedAt, seconds: m.seconds, title, note });
+      await store.addSession({ startedAt: m.startedAt, endedAt: m.endedAt, seconds: m.seconds, title, note, coverUrl: m.cover || '' });
       await store.updateReader({ status: 'idle', accum: 0, startedAt: null, sessionStartedAt: null, updatedAt: Date.now() });
       S.modal = null;
       render();
@@ -654,6 +674,8 @@ function walkerFor(id, room) {
   if (!w) {
     const W = Math.max(1, room.clientWidth - SPRITE_W), H = Math.max(1, room.clientHeight - SPRITE_H);
     w = { x: hash(id) * W, y: hash(id + 'y') * H, tx: 0, ty: 0, wait: 0.5 + hash(id + 'w') * 2, face: 1, speed: 14 + hash(id + 's') * 10, moving: false };
+    const others = [...walkers.values()];
+    for (let i = 0; i < 12 && others.some(o => Math.hypot(o.x - w.x, o.y - w.y) < MIN_GAP); i++) { w.x = hash(id + 'x' + i) * W; w.y = hash(id + 'y' + i) * H; }
     w.tx = w.x; w.ty = w.y;
     walkers.set(id, w);
   }
@@ -664,7 +686,7 @@ function newTarget(w, W, H, others) {
     const tx = Math.random() * W, ty = Math.random() * H;
     const d = Math.hypot(tx - w.x, ty - w.y);
     if (d < 60) continue;
-    if (others.some(o => Math.hypot(o.x - tx, o.y - ty) < 90)) continue;
+    if (others.some(o => Math.hypot(o.x - tx, o.y - ty) < MIN_GAP)) continue;
     w.tx = tx; w.ty = ty; return;
   }
   w.tx = Math.random() * W; w.ty = Math.random() * H;
@@ -693,6 +715,19 @@ function step(ts) {
         if (Math.abs(dx) > 2) w.face = dx < 0 ? -1 : 1;
       }
     } else { w.tx = w.x; w.ty = w.y; }
+    // keep characters from overlapping: a walker that gets too close to anyone is nudged away
+    if (canWalk) {
+      for (const o of all) {
+        if (o === w) continue;
+        const dx = w.x - o.x, dy = w.y - o.y, d = Math.hypot(dx, dy) || 0.01;
+        if (d < MIN_GAP) {
+          const push = (MIN_GAP - d) * 0.12;
+          w.x = Math.min(W, Math.max(0, w.x + dx / d * push));
+          w.y = Math.min(H, Math.max(0, w.y + dy / d * push));
+          if (d < MIN_GAP * 0.6) { w.tx = w.x; w.ty = w.y; w.wait = 0.3; }  // too crowded: pick a new spot soon
+        }
+      }
+    }
     el.style.transform = `translate(${w.x.toFixed(1)}px, ${w.y.toFixed(1)}px)`;
     el.style.setProperty('--face', w.face);
     el.style.setProperty('--bob', w.moving ? `${(Math.sin(ts / 110) * 1.8).toFixed(2)}px` : '0px');
@@ -721,7 +756,8 @@ function render() {
     </header>
     ${S.storeNote ? `<div class="notice">${esc(S.storeNote)}</div>` : ''}
     ${body}
-    ${S.modal ? renderModal() : ''}`;
+    ${S.modal ? renderModal() : ''}
+    ${S.bookOpen ? renderBookSheet() : ''}`;
   bind();
   if (keep) {
     const el = document.getElementById(keep.id);
@@ -800,9 +836,10 @@ function groupBooks(list) {
   const groups = new Map();
   for (const sess of list) {
     const key = (sess.title || '').trim().toLowerCase() || '\u0000';
-    if (!groups.has(key)) groups.set(key, { title: (sess.title || '').trim(), items: [], seconds: 0, latest: 0 });
+    if (!groups.has(key)) groups.set(key, { key, title: (sess.title || '').trim(), items: [], seconds: 0, latest: 0, cover: '' });
     const g = groups.get(key);
     g.items.push(sess); g.seconds += sess.seconds || 0; g.latest = Math.max(g.latest, sess.endedAt || 0);
+    if (!g.cover && sess.coverUrl) g.cover = sess.coverUrl;
   }
   const out = [...groups.values()];
   out.sort((a, b) => b.latest - a.latest);
@@ -823,38 +860,30 @@ function bubble(sess, mine, withTitle) {
 function renderLog() {
   const ids = [...S.readers.keys()].sort((a, b) => (a === S.me ? -1 : b === S.me ? 1 : 0));
   if (!ids.length) return `<div class="empty"><b>아직 기록이 없어요</b>지금 화면에서 읽기를 시작해 보세요.</div>`;
-  return `<section class="log">${ids.map(id => {
+  return `<section class="shelves">${ids.map(id => {
     const r = S.readers.get(id);
     const list = S.sessions.get(id) || [];
     const total = list.reduce((a, s) => a + (s.seconds || 0), 0);
     const mine = id === S.me;
-    const open = S.expanded.has(id);
-    let body = '';
-    if (!list.length) body = '';
-    else if (!open) {
-      body = bubble(list[0], mine, true) + (list.length > 1 ? `<div class="more"><button data-expand="${esc(id)}">더보기 (${list.length - 1})</button></div>` : '');
-    } else {
-      body = groupBooks(list).map(g => `<div class="cluster">${g.items.map((sess, i) => bubble(sess, mine, i === 0)).join('')}</div>`).join('')
-        + `<div class="more"><button data-expand="${esc(id)}">접기</button></div>`;
-    }
-    return `<article class="rec">
-      <div class="av">${charSvg(r.animal)}</div>
-      <div class="col">
-        <div class="who"><div class="n">${esc(r.nickname || '이름 없음')}${mine ? '<small>나</small>' : ''}</div>${total ? `<div class="tot">${fmtDur(total)}</div>` : ''}</div>
-        ${body}
-      </div>
+    const books = groupBooks(list).reverse();  // oldest first: the shelf fills left to right
+    return `<article class="shelf-card">
+      <div class="sh-head"><div class="av">${charSvg(r.animal)}</div><div class="who"><div class="n">${esc(r.nickname || '이름 없음')}${mine ? '<small>나</small>' : ''}</div>${total ? `<div class="tot">${fmtDur(total)}</div>` : ''}</div></div>
+      <div class="shelf">${books.map(g => `<button type="button" class="bk" data-book="${esc(id)}|${esc(g.key)}" title="${esc(g.title || '제목 없음')}">${g.cover ? `<img src="${esc(g.cover)}" alt="${esc(g.title)}" loading="lazy">` : `<span class="spine"><span>${esc(g.title || '제목 없음')}</span></span>`}</button>`).join('')}</div>
     </article>`;
   }).join('')}</section>`;
 }
-function recentTitles() {
-  const seen = new Set(), out = [];
-  for (const sess of S.sessions.get(S.me) || []) {
-    const t = (sess.title || '').trim(); const k = t.toLowerCase();
-    if (!t || seen.has(k)) continue;
-    seen.add(k); out.push(t);
-    if (out.length >= 8) break;
-  }
-  return out;
+function renderBookSheet() {
+  const { uid, key } = S.bookOpen;
+  const r = S.readers.get(uid); const list = S.sessions.get(uid) || [];
+  const g = groupBooks(list).find(x => x.key === key);
+  if (!r || !g) { S.bookOpen = null; return ''; }
+  const mine = uid === S.me;
+  return `<div class="overlay" id="book-overlay">
+    <div class="sheet book-sheet">
+      <div class="bs-head">${g.cover ? `<img class="cover-md" src="${esc(g.cover)}" alt="">` : ''}<div class="bs-t"><h3>${esc(g.title || '제목 없음')}</h3><div class="sum">${esc(r.nickname || '')}${mine ? ' (나)' : ''}</div></div><button type="button" class="x-close" id="book-close" aria-label="닫기">✕</button></div>
+      <div class="cluster">${g.items.map(sess => bubble(sess, mine, false)).join('')}</div>
+    </div>
+  </div>`;
 }
 function renderModal() {
   const m = S.modal;
@@ -862,9 +891,10 @@ function renderModal() {
     <form class="sheet" id="finish-form">
       <h3>잘 읽었어요</h3>
       <div class="sum">이번에 <b>${fmtClock(m.seconds * 1000)}</b> 읽었어요. 무슨 책이었나요?</div>
-      <div class="field"><label for="s-title">책 제목 <i>*</i></label><input id="s-title" maxlength="80" placeholder="읽은 책 제목" value="${esc(m.title)}" required list="title-list" autocomplete="off">
-        <datalist id="title-list">${recentTitles().map(t => `<option value="${esc(t)}"></option>`).join('')}</datalist>
-        ${recentTitles().length ? `<div class="chips" aria-label="전에 적은 제목">${recentTitles().map(t => `<button type="button" class="chip ${m.title.trim() === t ? 'on' : ''}" data-title="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}
+      <div class="field"><label for="s-title">책 제목 <i>*</i></label>
+        <div class="title-row">${m.cover ? `<img class="cover-sm" src="${esc(m.cover)}" alt="">` : ''}<input id="s-title" maxlength="80" placeholder="제목을 적으면 표지를 찾아줘요" value="${esc(m.title)}" required autocomplete="off"></div>
+        ${m.hits.length ? `<div class="suggest">${m.hits.map((h, i) => `<button type="button" class="hit" data-hit="${i}">${h.thumbnail ? `<img src="${esc(h.thumbnail)}" alt="">` : '<span class="nocover"></span>'}<span class="ht"><b>${esc(h.title)}</b><small>${esc((h.authors || []).join(', '))}${h.publisher ? ' · ' + esc(h.publisher) : ''}</small></span></button>`).join('')}</div>` : (m.searching ? `<div class="searching">표지 찾는 중…</div>` : '')}
+        ${recentTitles().length ? `<div class="chips" aria-label="전에 적은 제목">${recentTitles().map(t => `<button type="button" class="chip ${m.title.trim() === t.title ? 'on' : ''}" data-title="${esc(t.title)}" data-cover="${esc(t.cover)}">${esc(t.title)}</button>`).join('')}</div>` : ''}
       </div>
       <div class="field"><label for="s-note">한 줄 소감 <span style="color:var(--ink-soft)">(건너뛰어도 돼요)</span></label><textarea id="s-note" maxlength="300" placeholder="오늘 읽으면서 든 생각 한 줄">${esc(m.note)}</textarea></div>
       ${m.err ? `<div class="err">${esc(m.err)}</div>` : ''}
@@ -899,12 +929,15 @@ function bind() {
     if (r.status === 'idle') startReading(); else stopReading();
   }));
   app.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', () => ({ pause: pauseReading, resume: resumeReading, stop: stopReading })[b.dataset.act]()));
-  app.querySelectorAll('[data-expand]').forEach(b => b.addEventListener('click', () => { const id = b.dataset.expand; S.expanded.has(id) ? S.expanded.delete(id) : S.expanded.add(id); render(); }));
+  app.querySelectorAll('[data-book]').forEach(b => b.addEventListener('click', () => { const [uid, key] = b.dataset.book.split('|'); S.bookOpen = { uid, key }; render(); }));
+  $('#book-close')?.addEventListener('click', () => { S.bookOpen = null; render(); });
+  $('#book-overlay')?.addEventListener('click', e => { if (e.target.id === 'book-overlay') { S.bookOpen = null; render(); } });
   $('#finish-form')?.addEventListener('submit', e => { e.preventDefault(); finishSession(); });
   $('#finish-cancel')?.addEventListener('click', cancelStop);
   $('#finish-discard')?.addEventListener('click', discardSession);
-  app.querySelectorAll('[data-title]').forEach(b => b.addEventListener('click', () => { if (!S.modal) return; S.modal.title = b.dataset.title; S.modal.err = ''; const ti = $('#s-title'); if (ti) ti.value = b.dataset.title; render(); setTimeout(() => $('#s-note')?.focus(), 30); }));
-  $('#s-title')?.addEventListener('input', e => { if (S.modal) { S.modal.title = e.target.value; if (S.modal.err && e.target.value.trim()) { S.modal.err = ''; $('.sheet .err')?.remove(); } } });
+  app.querySelectorAll('[data-title]').forEach(b => b.addEventListener('click', () => { if (!S.modal) return; S.modal.title = b.dataset.title; S.modal.cover = b.dataset.cover || ''; S.modal.hits = []; S.modal.err = ''; const ti = $('#s-title'); if (ti) ti.value = b.dataset.title; render(); setTimeout(() => $('#s-note')?.focus(), 30); }));
+  $('#s-title')?.addEventListener('input', e => { if (S.modal) { S.modal.title = e.target.value; S.modal.cover = ''; if (S.modal.err && e.target.value.trim()) { S.modal.err = ''; $('.sheet .err')?.remove(); } searchBooks(e.target.value); } });
+  app.querySelectorAll('[data-hit]').forEach(b => b.addEventListener('click', () => pickHit(+b.dataset.hit)));
   $('#s-note')?.addEventListener('input', e => { if (S.modal) S.modal.note = e.target.value; });
   app.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => { S.confirmDel = b.dataset.del; render(); }));
   app.querySelectorAll('[data-del-no]').forEach(b => b.addEventListener('click', () => { S.confirmDel = null; render(); }));
