@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<script>window.APP_VERSION = "20261106221828";</script>
+<script>window.APP_VERSION = "20261106222120";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -65,6 +65,10 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .room-item .share { width: 52px; border: 1.5px solid var(--line); border-radius: 16px; background: var(--paper); color: var(--ink); display: inline-flex; align-items: center; justify-content: center; padding: 0; }
 .room-item .share svg { width: 20px; height: 20px; }
 .room-item .share.done { border-color: var(--accent-deep); color: var(--accent-deep); }
+.room-item .share.edit { color: var(--ink-soft); }
+.room-item .code-row { flex: 1; }
+.room-item .code-row input { flex: 1; min-width: 0; background: var(--paper); border: 1.5px solid var(--ink); border-radius: 16px; padding: 10px 14px; font-size: 20px; }
+.room-item .code-row .btn { padding: 8px 14px; font-size: 17px; white-space: nowrap; }
 .room-actions { display: flex; flex-direction: column; gap: 8px; }
 .room-btns { display: flex; gap: 8px; }
 .room-btns .btn { flex: 1; font-size: 17px; padding: 10px 12px; }
@@ -433,6 +437,7 @@ const ICON = {
   now: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M10 20v-5h4v5"/></svg>',
   log: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M5 20V5h3v15M10 20V8h3v12M15 20l2.5-11 3 .7L18 20"/></svg>',
   share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4"/><path d="M8 8l4-4 4 4"/><path d="M5 13v6h14v-6"/></svg>',
+  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M13.5 8.5l3 3"/></svg>',
   rooms: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
   chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>',
   send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
@@ -443,7 +448,7 @@ const ICON = {
 const S = {
   phase: 'loading',       // loading | rooms | setup | app
   room: null,             // {id, name} current room (supabase mode)
-  roomsUi: { err: '', busy: false, mode: '' },   // mode: '' | 'create' | 'join'
+  roomsUi: { err: '', busy: false, mode: '', renameId: '' },   // mode: '' | 'create' | 'join' | 'rename'
   person: null,           // reader id whose timeline is open (tab 'log')
   tab: 'now',
   me: null,
@@ -478,6 +483,19 @@ async function createRoom() {
     rememberRoom({ id, name }); gotoRoom(id);
   } catch (e) { console.error(e); S.roomsUi.busy = false; S.roomsUi.err = '방을 만들지 못했어요. 잠시 후 다시 시도해 주세요.'; render(); }
 }
+async function renameRoom() {
+  const id = S.roomsUi.renameId, name = ($('#room-rename')?.value || '').trim();
+  if (!name) { S.roomsUi.err = '방 이름을 적어 주세요.'; render(); return; }
+  S.roomsUi.busy = true; S.roomsUi.err = ''; render();
+  try {
+    if (!sbClient) throw new Error('no client');
+    const { error } = await sbClient.from('rr_rooms').update({ name }).eq('id', id);
+    if (error) throw error;
+    rememberRoom({ id, name });
+    if (S.room && S.room.id === id) S.room.name = name;
+    S.roomsUi.busy = false; S.roomsUi.mode = ''; S.roomsUi.renameId = ''; render();
+  } catch (e) { console.error(e); S.roomsUi.busy = false; S.roomsUi.err = '이름을 바꾸지 못했어요. 잠시 후 다시 시도해 주세요.'; render(); }
+}
 async function joinRoom() {
   const code = ($('#room-code')?.value || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
   if (!code) { S.roomsUi.err = '방 코드를 넣어 주세요.'; render(); return; }
@@ -495,7 +513,7 @@ const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion:
 const SPRITE_W = 110, SPRITE_H = 170, MIN_GAP = 140;
 const BOOK_API = 'https://hanjul-khaki.vercel.app/api/public/books';
 
-try { S.tab = localStorage.getItem('rr.tab') === 'log' ? 'log' : 'now'; } catch (e) {}
+S.tab = 'now';  // a room always opens on the home tab
 
 // ---------- helpers ----------
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -879,8 +897,11 @@ function renderRooms() {
   const rooms = rememberedRooms();
   const ui = S.roomsUi;
   return `<section class="rooms">
-    ${rooms.length ? `<ul class="room-list">${rooms.map(r => `<li class="room-item">
+    ${rooms.length ? `<ul class="room-list">${rooms.map(r => ui.mode === 'rename' && ui.renameId === r.id ? `<li class="room-item">
+      <div class="code-row"><input id="room-rename" maxlength="24" value="${esc(r.name)}" placeholder="방 이름" autocomplete="off"><button type="button" class="btn primary" id="room-rename-save" ${ui.busy ? 'disabled' : ''}>${ui.busy ? '…' : '저장'}</button><button type="button" class="btn ghost" id="room-rename-cancel">취소</button></div>
+    </li>` : `<li class="room-item">
       <button type="button" class="room-go" data-room="${esc(r.id)}"><b>${esc(r.name)}</b><small>${esc(r.id)}</small><span class="chev">›</span></button>
+      <button type="button" class="share edit" data-rename-room="${esc(r.id)}" title="이름 바꾸기" aria-label="이름 바꾸기">${ICON.edit}</button>
       <button type="button" class="share" data-copy-room="${esc(r.id)}" title="초대 링크 복사" aria-label="초대 링크 복사">${ICON.share}</button>
     </li>`).join('')}</ul>` : ''}
     <div class="room-actions">
@@ -889,7 +910,7 @@ function renderRooms() {
       : `<div class="room-btns"><button type="button" class="btn ghost" id="room-new">+ 새 방</button><button type="button" class="btn ghost" id="room-join-open">코드로 들어가기</button></div>`}
       ${ui.err ? `<p class="err">${esc(ui.err)}</p>` : ''}
     </div>
-    <p class="hint">방을 누르면 들어가요. 초대는 방 옆 공유 버튼으로 링크를 복사해 보내면 돼요.</p>
+    <p class="hint">방을 누르면 들어가요. 연필로 이름을 바꾸고, 공유 버튼으로 초대 링크를 보내요.</p>
   </section>`;
 }
 function renderPerson() {
@@ -1091,6 +1112,10 @@ function bind() {
   $('#go-rooms')?.addEventListener('click', () => { const u = new URL(location.href); u.search = ''; location.href = u.toString(); });
   app.querySelectorAll('[data-room]').forEach(b => b.addEventListener('click', () => gotoRoom(b.dataset.room)));
   app.querySelectorAll('[data-copy-room]').forEach(b => b.addEventListener('click', async () => { const link = roomLink(b.dataset.copyRoom); const name = rememberedRooms().find(r => r.id === b.dataset.copyRoom)?.name || '같이 읽는 방'; try { if (navigator.share) { await navigator.share({ title: name, text: name + '에서 같이 읽어요', url: link }); return; } } catch (e) { if (e && e.name === 'AbortError') return; } try { await navigator.clipboard.writeText(link); b.classList.add('done'); setTimeout(() => b.classList.remove('done'), 1500); } catch (e) { S.roomsUi.err = link; render(); } }));
+  app.querySelectorAll('[data-rename-room]').forEach(b => b.addEventListener('click', () => { S.roomsUi.mode = 'rename'; S.roomsUi.renameId = b.dataset.renameRoom; S.roomsUi.err = ''; render(); setTimeout(() => { const i = $('#room-rename'); if (i) { i.focus(); i.select(); } }, 30); }));
+  $('#room-rename-save')?.addEventListener('click', renameRoom);
+  $('#room-rename-cancel')?.addEventListener('click', () => { S.roomsUi.mode = ''; S.roomsUi.renameId = ''; S.roomsUi.err = ''; render(); });
+  $('#room-rename')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); renameRoom(); } });
   $('#room-new')?.addEventListener('click', () => { S.roomsUi.mode = 'create'; S.roomsUi.err = ''; render(); setTimeout(() => $('#room-name')?.focus(), 30); });
   $('#room-join-open')?.addEventListener('click', () => { S.roomsUi.mode = 'join'; S.roomsUi.err = ''; render(); setTimeout(() => $('#room-code')?.focus(), 30); });
   $('#room-create')?.addEventListener('click', createRoom);
@@ -1110,7 +1135,7 @@ function bind() {
   $('#chat-form')?.addEventListener('submit', e => { e.preventDefault(); sendChat(); });
   const box = $('#chat-box'); if (box) box.scrollTop = box.scrollHeight;
   $('#edit-profile')?.addEventListener('click', () => { S.setupAnimal = myReader()?.animal || null; S.phase = 'setup'; render(); });
-  app.querySelectorAll('[data-tab]').forEach(t => t.addEventListener('click', () => { S.tab = t.dataset.tab; S.person = null; try { localStorage.setItem('rr.tab', S.tab); } catch (e) {} render(); }));
+  app.querySelectorAll('[data-tab]').forEach(t => t.addEventListener('click', () => { S.tab = t.dataset.tab; S.person = null; render(); }));
   app.querySelectorAll('[data-book="1"]').forEach(b => b.addEventListener('click', () => {
     const r = myReader(); if (!r) return;
     if (r.status === 'idle') startReading(); else stopReading();
