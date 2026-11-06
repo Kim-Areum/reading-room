@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<script>window.APP_VERSION = "20261106163634";</script>
+<script>window.APP_VERSION = "20261106163755";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -55,22 +55,24 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .notice { font-size: 15px; color: var(--ink-soft); border: 1px dashed var(--line); border-radius: 10px; padding: 8px 12px; margin-block: 6px 4px; }
 
 /* ----- rooms ----- */
-.rooms { padding-block: 12px; }
-.rooms h1 { font-weight: 400; font-size: 30px; margin: 8px 0 2px; }
-.rooms p.lead { color: var(--ink-soft); margin: 0 0 16px; }
-.room-list { list-style: none; margin: 0 0 18px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.room-item { display: flex; align-items: center; gap: 8px; border: 1.5px solid var(--ink); border-radius: 14px; padding: 8px 10px 8px 12px; }
-.room-go { flex: 1; min-width: 0; background: none; border: 0; text-align: left; display: flex; flex-direction: column; padding: 0; }
-.room-go b { font-weight: 400; font-size: 20px; line-height: 1.2; }
+.rooms { padding-block: 14px; display: flex; flex-direction: column; gap: 14px; }
+.room-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.room-item { display: flex; align-items: stretch; gap: 8px; }
+.room-go { flex: 1; min-width: 0; background: var(--paper); border: 1.5px solid var(--ink); border-radius: 16px; text-align: left; display: flex; align-items: center; gap: 10px; padding: 14px 14px; color: var(--ink); }
+.room-go b { font-weight: 400; font-size: 22px; line-height: 1.2; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .room-go small { font-size: 13px; color: var(--ink-soft); letter-spacing: 0.06em; }
-.room-item .mini { border: 1.5px solid var(--line); background: var(--paper); border-radius: 999px; font-size: 14px; padding: 3px 10px; color: var(--ink); white-space: nowrap; }
-.room-item .mini.ghost { border-color: transparent; color: var(--ink-soft); padding: 3px 6px; }
-.room-actions { display: flex; flex-direction: column; gap: 14px; }
+.room-go .chev { font-size: 22px; color: var(--ink-soft); line-height: 1; }
+.room-item .share { width: 52px; border: 1.5px solid var(--line); border-radius: 16px; background: var(--paper); color: var(--ink); display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.room-item .share svg { width: 20px; height: 20px; }
+.room-item .share.done { border-color: var(--accent-deep); color: var(--accent-deep); }
+.room-actions { display: flex; flex-direction: column; gap: 8px; }
+.room-btns { display: flex; gap: 8px; }
+.room-btns .btn { flex: 1; font-size: 17px; padding: 10px 12px; }
 .room-actions .code-row { display: flex; gap: 8px; }
 .room-actions .code-row input { flex: 1; min-width: 0; background: var(--paper); border: 1.5px solid var(--line); border-radius: 12px; padding: 8px 12px; font-size: 19px; }
 .room-actions .code-row .btn { padding: 8px 14px; font-size: 17px; white-space: nowrap; }
-.room-actions .err { color: var(--accent-deep); margin: 0; font-size: 15px; }
-.rooms .none { color: var(--ink-soft); margin-bottom: 16px; }
+.room-actions .err { color: var(--accent-deep); margin: 0; font-size: 15px; overflow-wrap: anywhere; }
+.rooms .hint { color: var(--ink-soft); font-size: 14px; margin: 4px 0 0; }
 .roomsbtn { background: none; border: 1.5px solid var(--line); border-radius: 999px; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; color: var(--ink-soft); padding: 0; margin-right: 6px; vertical-align: middle; }
 .roomsbtn svg { width: 15px; height: 15px; }
 
@@ -431,6 +433,7 @@ const CHAIR_SVG = '<svg class="chair" viewBox="0 0 120 100" aria-hidden="true"><
 const ICON = {
   now: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M10 20v-5h4v5"/></svg>',
   log: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M5 20V5h3v15M10 20V8h3v12M15 20l2.5-11 3 .7L18 20"/></svg>',
+  share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4"/><path d="M8 8l4-4 4 4"/><path d="M5 13v6h14v-6"/></svg>',
   rooms: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
   chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>',
   send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
@@ -441,7 +444,7 @@ const ICON = {
 const S = {
   phase: 'loading',       // loading | rooms | setup | app
   room: null,             // {id, name} current room (supabase mode)
-  roomsUi: { err: '', busy: false, creating: false },
+  roomsUi: { err: '', busy: false, mode: '' },   // mode: '' | 'create' | 'join'
   person: null,           // reader id whose timeline is open (tab 'log')
   tab: 'now',
   me: null,
@@ -876,19 +879,17 @@ function renderRooms() {
   const rooms = rememberedRooms();
   const ui = S.roomsUi;
   return `<section class="rooms">
-    <h1>내 방</h1>
-    <p class="lead">방마다 캐릭터와 기록이 따로예요. 링크를 공유하면 친구가 그 방으로 들어옵니다.</p>
     ${rooms.length ? `<ul class="room-list">${rooms.map(r => `<li class="room-item">
-      <button type="button" class="room-go" data-room="${esc(r.id)}"><b>${esc(r.name)}</b><small>코드 ${esc(r.id)}</small></button>
-      <button type="button" class="mini" data-copy-room="${esc(r.id)}">링크 복사</button>
-      <button type="button" class="mini ghost" data-forget-room="${esc(r.id)}" aria-label="목록에서 빼기">✕</button>
-    </li>`).join('')}</ul>` : `<div class="none">아직 들어가 본 방이 없어요.</div>`}
+      <button type="button" class="room-go" data-room="${esc(r.id)}"><b>${esc(r.name)}</b><small>${esc(r.id)}</small><span class="chev">›</span></button>
+      <button type="button" class="share" data-copy-room="${esc(r.id)}" title="초대 링크 복사" aria-label="초대 링크 복사">${ICON.share}</button>
+    </li>`).join('')}</ul>` : ''}
     <div class="room-actions">
-      ${ui.creating ? `<div class="field"><label for="room-name">새 방 이름</label><div class="code-row"><input id="room-name" maxlength="24" placeholder="예: 자매방" autocomplete="off"><button type="button" class="btn primary" id="room-create" ${ui.busy ? 'disabled' : ''}>${ui.busy ? '만드는 중…' : '만들기'}</button></div></div>`
-        : `<button type="button" class="btn primary" id="room-new">새 방 만들기</button>`}
-      <div class="field"><label for="room-code">코드로 들어가기</label><div class="code-row"><input id="room-code" maxlength="12" placeholder="친구가 알려준 방 코드" autocapitalize="none" autocomplete="off"><button type="button" class="btn" id="room-join" ${ui.busy ? 'disabled' : ''}>입장</button></div></div>
+      ${ui.mode === 'create' ? `<div class="code-row"><input id="room-name" maxlength="24" placeholder="새 방 이름" autocomplete="off"><button type="button" class="btn primary" id="room-create" ${ui.busy ? 'disabled' : ''}>${ui.busy ? '…' : '만들기'}</button></div>`
+      : ui.mode === 'join' ? `<div class="code-row"><input id="room-code" maxlength="12" placeholder="방 코드" autocapitalize="none" autocomplete="off"><button type="button" class="btn" id="room-join" ${ui.busy ? 'disabled' : ''}>${ui.busy ? '…' : '입장'}</button></div>`
+      : `<div class="room-btns"><button type="button" class="btn ghost" id="room-new">+ 새 방</button><button type="button" class="btn ghost" id="room-join-open">코드로 들어가기</button></div>`}
       ${ui.err ? `<p class="err">${esc(ui.err)}</p>` : ''}
     </div>
+    <p class="hint">방을 누르면 들어가요. 초대는 방 옆 공유 버튼으로 링크를 복사해 보내면 돼요.</p>
   </section>`;
 }
 function renderPerson() {
@@ -1074,9 +1075,9 @@ function bind() {
   $('#setup-save')?.addEventListener('click', saveProfile);
   $('#go-rooms')?.addEventListener('click', () => { const u = new URL(location.href); u.search = ''; location.href = u.toString(); });
   app.querySelectorAll('[data-room]').forEach(b => b.addEventListener('click', () => gotoRoom(b.dataset.room)));
-  app.querySelectorAll('[data-copy-room]').forEach(b => b.addEventListener('click', async () => { const link = roomLink(b.dataset.copyRoom); try { await navigator.clipboard.writeText(link); b.textContent = '복사됨'; } catch (e) { b.textContent = link; } }));
-  app.querySelectorAll('[data-forget-room]').forEach(b => b.addEventListener('click', () => { forgetRoom(b.dataset.forgetRoom); render(); }));
-  $('#room-new')?.addEventListener('click', () => { S.roomsUi.creating = true; S.roomsUi.err = ''; render(); setTimeout(() => $('#room-name')?.focus(), 30); });
+  app.querySelectorAll('[data-copy-room]').forEach(b => b.addEventListener('click', async () => { const link = roomLink(b.dataset.copyRoom); const name = rememberedRooms().find(r => r.id === b.dataset.copyRoom)?.name || '같이 읽는 방'; try { if (navigator.share) { await navigator.share({ title: name, text: name + '에서 같이 읽어요', url: link }); return; } } catch (e) { if (e && e.name === 'AbortError') return; } try { await navigator.clipboard.writeText(link); b.classList.add('done'); setTimeout(() => b.classList.remove('done'), 1500); } catch (e) { S.roomsUi.err = link; render(); } }));
+  $('#room-new')?.addEventListener('click', () => { S.roomsUi.mode = 'create'; S.roomsUi.err = ''; render(); setTimeout(() => $('#room-name')?.focus(), 30); });
+  $('#room-join-open')?.addEventListener('click', () => { S.roomsUi.mode = 'join'; S.roomsUi.err = ''; render(); setTimeout(() => $('#room-code')?.focus(), 30); });
   $('#room-create')?.addEventListener('click', createRoom);
   $('#room-name')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); createRoom(); } });
   $('#room-join')?.addEventListener('click', joinRoom);
