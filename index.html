@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<script>window.APP_VERSION = "20261106161225";</script>
+<script>window.APP_VERSION = "20261106162138";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -885,6 +885,40 @@ function renderBookSheet() {
       <div class="cluster">${g.items.map(sess => bubble(sess, mine, false)).join('')}</div>
     </div>
   </div>`;
+}
+function recentTitles() {
+  const seen = new Set(), out = [];
+  for (const sess of S.sessions.get(S.me) || []) {
+    const t = (sess.title || '').trim(); const k = t.toLowerCase();
+    if (!t || seen.has(k)) continue;
+    seen.add(k); out.push({ title: t, cover: sess.coverUrl || '' });
+    if (out.length >= 8) break;
+  }
+  return out;
+}
+let searchTimer = null, searchSeq = 0;
+function searchBooks(q) {
+  clearTimeout(searchTimer);
+  const m = S.modal; if (!m) return;
+  q = q.trim();
+  if (q.length < 1) { m.hits = []; m.searching = false; render(); return; }
+  searchTimer = setTimeout(async () => {
+    const seq = ++searchSeq;
+    m.searching = true; render();
+    try {
+      const r = await fetch(BOOK_API + '?q=' + encodeURIComponent(q));
+      const data = r.ok ? await r.json() : { hits: [] };
+      if (seq !== searchSeq || !S.modal) return;
+      S.modal.hits = (data.hits || []).slice(0, 5).map(h => ({ ...h, thumbnail: (h.thumbnail || '').replace(/^http:/, 'https:') }));
+    } catch (e) { if (S.modal) S.modal.hits = []; }
+    if (S.modal) { S.modal.searching = false; render(); }
+  }, 350);
+}
+function pickHit(i) {
+  const m = S.modal; const h = m && m.hits[i]; if (!h) return;
+  m.title = h.title; m.cover = h.thumbnail || ''; m.hits = []; m.searching = false; m.err = '';
+  const ti = $('#s-title'); if (ti) ti.value = h.title;
+  render(); setTimeout(() => $('#s-note')?.focus(), 30);
 }
 function renderModal() {
   const m = S.modal;
