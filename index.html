@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<script>window.APP_VERSION = "20261107210541";</script>
+<script>window.APP_VERSION = "20261107210647";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -162,6 +162,7 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .sprite .seat { position: relative; width: 78px; height: 86px; }
 .sprite .seat .chair { position: absolute; left: -21px; bottom: -6px; width: 120px; height: 75px; color: var(--ink); pointer-events: none; }
 .sprite .seat .chair.front { z-index: 2; }
+.sprite .seat .feet { position: absolute; left: 9px; bottom: 0; width: 60px; height: 22px; z-index: 3; pointer-events: none; color: var(--ink); }
 .sprite .seat:has(.chair) { margin-bottom: 7px; }   /* the sofa base hangs 6px below the seat box; keep the name clear of it */
 .sprite .seat .body { z-index: 1; }
 .sprite .body { position: relative; width: 78px; height: 86px; transform: translateY(var(--bob)) scaleX(var(--face)); transform-origin: 50% 100%; }
@@ -468,6 +469,8 @@ function glassesSvg(animal) {
 const CHAIR_BACK = '<svg class="chair back" viewBox="0 0 160 100" aria-hidden="true"><g fill="var(--accent)" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 36 q0 -10 10 -10 h96 q10 0 10 10 v40 h-116 z"/></g></svg>';
 const CHAIR_FRONT = '<svg class="chair front" viewBox="0 0 160 100" aria-hidden="true"><g fill="var(--accent)" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 76 q0 -6 6 -6 h112 q6 0 6 6 v10 h-124 z"/><path d="M4 58 q0 -8 8 -8 h12 q8 0 8 8 v30 h-28 z"/><path d="M128 58 q0 -8 8 -8 h12 q8 0 8 8 v30 h-28 z"/><path d="M4 86 h152 v8 q0 5 -5 5 h-142 q-5 0 -5 -5 z"/></g></svg>';
 const CHAIR_SVG = CHAIR_BACK;
+// Two soles poking out over the seat cushion, in the character's own colours (the .ch-<animal> class picks up the skin variables).
+const feetSvg = animal => `<svg class="ch ch-${animal} feet" viewBox="0 0 60 22" aria-hidden="true"><g fill="var(--paper)" stroke="var(--ln, currentColor)" stroke-width="var(--lw, 3)" stroke-linejoin="round"><ellipse cx="18" cy="11" rx="8.5" ry="7.5" transform="rotate(-10 18 11)"/><ellipse cx="42" cy="11" rx="8.5" ry="7.5" transform="rotate(10 42 11)"/></g></svg>`;
 const ICON = {
   now: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M10 20v-5h4v5"/></svg>',
   log: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M5 20V5h3v15M10 20V8h3v12M15 20l2.5-11 3 .7L18 20"/></svg>',
@@ -1063,7 +1066,7 @@ function renderRoom() {
       ${mine && st === 'idle' && !guideDone() ? `<button type="button" class="guide" id="guide">📕를 탭하면 읽기 시작!<br><small>다 읽으면 📖를 한 번 더</small></button>` : ''}
       <div class="bookwrap">${st === 'reading' ? `<span class="dots" aria-hidden="true">···</span>` : ''}<button class="book ${st !== 'idle' ? 'on' : ''} ${mine ? 'mine' : ''}" data-book="${mine ? '1' : ''}"
         ${mine ? '' : 'tabindex="-1" aria-hidden="true"'} aria-label="${st === 'idle' ? '읽기 시작' : '읽기 종료'}" title="${mine ? (st === 'idle' ? '탭해서 읽기 시작' : '탭해서 읽기 종료') : ''}">${st === 'idle' ? '📕' : '📖'}</button></div>
-      <div class="seat">${st !== 'idle' ? CHAIR_BACK : ''}<div class="body">${charSvg(r.animal)}${st !== 'idle' ? glassesSvg(r.animal) : ''}</div>${st !== 'idle' ? CHAIR_FRONT : ''}</div>
+      <div class="seat">${st !== 'idle' ? CHAIR_BACK : ''}<div class="body">${charSvg(r.animal)}${st !== 'idle' ? glassesSvg(r.animal) : ''}</div>${st !== 'idle' ? CHAIR_FRONT + feetSvg(r.animal) : ''}</div>
       <div class="name">${esc(r.nickname || '이름 없음')}${mine ? '<span class="me">나</span>' : ''}</div>
       <div class="timer ${st}" data-timer="${esc(id)}">${st === 'idle' ? '' : fmtClock(elapsedOf(r))}</div>
       ${mine && st !== 'idle' ? `<div class="ctrl">
