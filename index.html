@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<script>window.APP_VERSION = "20261107205635";</script>
+<script>window.APP_VERSION = "20261107210541";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -160,17 +160,20 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .sprite .book.on.mine:hover { opacity: 1; }
 .sprite .book:not(.mine) { cursor: default; }
 .sprite .seat { position: relative; width: 78px; height: 86px; }
-.sprite .seat .chair { position: absolute; left: -28px; bottom: -6px; width: 134px; height: 84px; color: var(--ink); }
+.sprite .seat .chair { position: absolute; left: -21px; bottom: -6px; width: 120px; height: 75px; color: var(--ink); pointer-events: none; }
+.sprite .seat .chair.front { z-index: 2; }
+.sprite .seat:has(.chair) { margin-bottom: 7px; }   /* the sofa base hangs 6px below the seat box; keep the name clear of it */
+.sprite .seat .body { z-index: 1; }
 .sprite .body { position: relative; width: 78px; height: 86px; transform: translateY(var(--bob)) scaleX(var(--face)); transform-origin: 50% 100%; }
 .sprite .body .glasses { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; color: var(--ink); }
 .sprite.reading .body, .sprite .seat .chair ~ .body { --face: 1; }
-.sprite .seat .chair ~ .body { transform: translateY(6px) scale(0.92); transform-origin: 50% 100%; }
+.sprite .seat .chair ~ .body { transform: translateY(5px) scale(1, 0.94); transform-origin: 50% 100%; }   /* slightly squat; feet hide behind the seat cushion */
 .sprite .body svg { width: 100%; height: 100%; display: block; }
 .sprite.reading .body { animation: sway 3.2s ease-in-out infinite; }
 .sprite.reading .book { animation: readbook 1.6s ease-in-out infinite; }
 .sprite .bookwrap { position: relative; display: inline-block; }
 .sprite.reading .dots { position: absolute; bottom: 100%; left: 50%; width: 22px; margin-left: -11px; margin-bottom: -4px; text-align: center; font-size: 13px; line-height: 1; color: var(--ink-soft); animation: drift 2.4s ease-in-out infinite; letter-spacing: 2px; }
-@keyframes sway { 0%,100% { transform: translateY(6px) scale(0.92) rotate(-2deg) } 50% { transform: translateY(6px) scale(0.92) rotate(2deg) } }
+@keyframes sway { 0%,100% { transform: translateY(5px) scale(1, 0.94) rotate(-1.5deg) } 50% { transform: translateY(5px) scale(1, 0.94) rotate(1.5deg) } }
 @keyframes readbook { 0%,100% { transform: translateY(0) rotate(-6deg) } 50% { transform: translateY(-4px) rotate(6deg) } }
 @keyframes drift { 0% { opacity: 0; transform: translateY(6px) } 30% { opacity: 1 } 100% { opacity: 0; transform: translateY(-10px) } }
 .sprite .name { font-size: 17px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; line-height: 1.2; }
@@ -461,7 +464,10 @@ function glassesSvg(animal) {
   const r = Math.min(7, (x2 - x1) / 2 - 1.5);
   return `<svg class="glasses" viewBox="0 0 100 110" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="${x1}" cy="${y}" r="${r}"/><circle cx="${x2}" cy="${y}" r="${r}"/><path d="M${x1 + r} ${y} h${x2 - x1 - 2 * r}"/><path d="M${x1 - r} ${y} l-7 -2 M${x2 + r} ${y} l7 -2"/></g></svg>`;
 }
-const CHAIR_SVG = '<svg class="chair" viewBox="0 0 160 100" aria-hidden="true"><g fill="var(--accent)" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16 q0 -10 10 -10 h96 q10 0 10 10 v36 h-116 z"/><path d="M20 46 q0 -6 6 -6 h108 q6 0 6 6 v26 h-120 z"/><path d="M4 40 q0 -8 8 -8 h12 q8 0 8 8 v40 h-28 z"/><path d="M128 40 q0 -8 8 -8 h12 q8 0 8 8 v40 h-28 z"/><path d="M4 72 h152 v8 q0 6 -6 6 h-140 q-6 0 -6 -6 z"/><path d="M18 86 v10 M142 86 v10" fill="none"/></g></svg>';
+// Sofa in two layers: the back goes behind the character, the seat cushion and arms in front, so the lower body is hidden as if seated.
+const CHAIR_BACK = '<svg class="chair back" viewBox="0 0 160 100" aria-hidden="true"><g fill="var(--accent)" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 36 q0 -10 10 -10 h96 q10 0 10 10 v40 h-116 z"/></g></svg>';
+const CHAIR_FRONT = '<svg class="chair front" viewBox="0 0 160 100" aria-hidden="true"><g fill="var(--accent)" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 76 q0 -6 6 -6 h112 q6 0 6 6 v10 h-124 z"/><path d="M4 58 q0 -8 8 -8 h12 q8 0 8 8 v30 h-28 z"/><path d="M128 58 q0 -8 8 -8 h12 q8 0 8 8 v30 h-28 z"/><path d="M4 86 h152 v8 q0 5 -5 5 h-142 q-5 0 -5 -5 z"/></g></svg>';
+const CHAIR_SVG = CHAIR_BACK;
 const ICON = {
   now: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M10 20v-5h4v5"/></svg>',
   log: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M5 20V5h3v15M10 20V8h3v12M15 20l2.5-11 3 .7L18 20"/></svg>',
@@ -1057,7 +1063,7 @@ function renderRoom() {
       ${mine && st === 'idle' && !guideDone() ? `<button type="button" class="guide" id="guide">📕를 탭하면 읽기 시작!<br><small>다 읽으면 📖를 한 번 더</small></button>` : ''}
       <div class="bookwrap">${st === 'reading' ? `<span class="dots" aria-hidden="true">···</span>` : ''}<button class="book ${st !== 'idle' ? 'on' : ''} ${mine ? 'mine' : ''}" data-book="${mine ? '1' : ''}"
         ${mine ? '' : 'tabindex="-1" aria-hidden="true"'} aria-label="${st === 'idle' ? '읽기 시작' : '읽기 종료'}" title="${mine ? (st === 'idle' ? '탭해서 읽기 시작' : '탭해서 읽기 종료') : ''}">${st === 'idle' ? '📕' : '📖'}</button></div>
-      <div class="seat">${st !== 'idle' ? CHAIR_SVG : ''}<div class="body">${charSvg(r.animal)}${st !== 'idle' ? glassesSvg(r.animal) : ''}</div></div>
+      <div class="seat">${st !== 'idle' ? CHAIR_BACK : ''}<div class="body">${charSvg(r.animal)}${st !== 'idle' ? glassesSvg(r.animal) : ''}</div>${st !== 'idle' ? CHAIR_FRONT : ''}</div>
       <div class="name">${esc(r.nickname || '이름 없음')}${mine ? '<span class="me">나</span>' : ''}</div>
       <div class="timer ${st}" data-timer="${esc(id)}">${st === 'idle' ? '' : fmtClock(elapsedOf(r))}</div>
       ${mine && st !== 'idle' ? `<div class="ctrl">
