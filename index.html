@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#fcfbf8">
-<script>window.APP_VERSION = "20261107211951";</script>
+<script>window.APP_VERSION = "20261107212311";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -170,7 +170,7 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .sprite .seat { position: relative; width: 78px; height: 86px; }
 .sprite .seat .chair { position: absolute; left: -21px; bottom: -6px; width: 120px; height: 75px; color: var(--ink); pointer-events: none; }
 .sprite .seat .chair.front { z-index: 2; }
-.sprite .seat .feet { position: absolute; left: 9px; bottom: 0; width: 60px; height: 22px; z-index: 3; pointer-events: none; color: var(--ink); }
+.sprite .seat .feet { position: absolute; left: 9px; bottom: 9px; width: 60px; height: 22px; z-index: 3; pointer-events: none; color: var(--ink); }
 .sprite .seat:has(.chair) { margin-bottom: 7px; }   /* the sofa base hangs 6px below the seat box; keep the name clear of it */
 .sprite .seat .body { z-index: 1; }
 .sprite .body { position: relative; width: 78px; height: 86px; transform: translateY(var(--bob)) scaleX(var(--face)); transform-origin: 50% 100%; }
@@ -251,8 +251,11 @@ body.skin-soft .sprite.offline .ch { filter: url(#brush) grayscale(.5); }
 .sh-head .n { font-size: 17px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sh-head .n small { font-size: 11px; color: var(--ink-soft); margin-left: 3px; }
 .sh-head .tot { font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
-.shelf { display: flex; flex-wrap: wrap; align-content: flex-start; align-items: flex-start; gap: 6px 5px; padding: 4px 6px 6px; min-height: 58px; max-height: 186px; overflow: hidden; box-sizing: content-box;
-  background: repeating-linear-gradient(to bottom, transparent 0, transparent 58px, var(--ink) 58px, var(--ink) 60px, transparent 60px, transparent 64px); background-size: 100% 64px; background-repeat: repeat-y; background-origin: content-box; background-clip: padding-box; }
+.shelf { --wood: #e6d3b3; --wood-d: #c9ab84; --wood-back: #faf5ec; display: flex; flex-wrap: wrap; align-content: flex-start; align-items: flex-start; gap: 12px 5px; padding: 6px 7px 8px; min-height: 58px; max-height: 198px; overflow: hidden; box-sizing: content-box;
+  border-left: 7px solid var(--wood-d); border-right: 7px solid var(--wood-d); border-top: 5px solid var(--wood-d); border-radius: 4px;
+  background: repeating-linear-gradient(to bottom, transparent 0, transparent 58px, var(--wood) 58px, var(--wood) 63px, var(--wood-d) 63px, var(--wood-d) 66px, transparent 66px, transparent 70px) var(--wood-back);
+  background-size: 100% 70px; background-repeat: repeat-y; background-origin: padding-box; background-position: 0 6px; background-clip: padding-box; }   /* planks span post to post; the 6px offset is the top padding */
+.shelf-card { padding-bottom: 10px; }
 .bk { height: 58px; padding: 0; border: 0; background: none; display: block; flex: none; }
 .bk img { height: 58px; width: 40px; box-sizing: border-box; object-fit: cover; display: block; border: 1.5px solid var(--ink); border-radius: 2px 4px 4px 2px; background: var(--paper); }
 .bk .spine { display: flex; align-items: center; justify-content: center; height: 58px; width: 20px; border: 1.5px solid var(--ink); border-radius: 3px; background: var(--accent); writing-mode: vertical-rl; font-size: 11px; line-height: 1; padding: 3px 0; overflow: hidden; color: var(--accent-ink); box-sizing: border-box; }
