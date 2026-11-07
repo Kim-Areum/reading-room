@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#fcfbf8">
-<script>window.APP_VERSION = "20261107212311";</script>
+<script>window.APP_VERSION = "20261107213046";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -142,6 +142,12 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .btn:disabled { opacity: 0.35; cursor: default; }
 .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
 .btn-row .btn { flex: 1 1 auto; }
+.field.push .push-row { display: flex; align-items: center; gap: 10px; font-size: 16px; }
+.field.push .push-row b { font-weight: 400; color: var(--accent-deep); }
+.field.push .mini { border: 1.5px solid var(--line); background: var(--paper); border-radius: 999px; font-size: 14px; padding: 2px 10px; color: var(--ink); }
+.field.push .note { margin: 4px 0 0; font-size: 14px; color: var(--ink-soft); }
+.field.push .note.err { color: var(--accent-deep); }
+.field.push .btn.ghost { align-self: flex-start; padding: 7px 14px; font-size: 16px; }
 .handoff { margin-top: 22px; padding-top: 14px; border-top: 1px dashed var(--line); font-size: 15px; color: var(--ink-soft); }
 .handoff p { margin: 6px 0 0; }
 .handoff .hd { color: var(--ink); font-size: 17px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -446,7 +452,7 @@ body.skin-soft .sprite.offline .ch { filter: url(#brush) grayscale(.5); }
 </svg>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
-<script src="config.js"></script>
+<script src="config.js?v=20261107213046"></script>
 <script>
 (() => {
 'use strict';
@@ -509,6 +515,7 @@ const S = {
   modal: null,            // {seconds, startedAt, endedAt, title, note, file, preview, err, saving}
   installTip: null,       // 'ios' | 'android' when we should suggest adding to the home screen
   installPrompt: null,    // Android's deferred beforeinstallprompt event
+  pushBusy: false, pushErr: '',
   confirmDel: null,      // session id awaiting delete confirmation
   editNote: null,        // session id being edited (title + memo)
   editTitle: '', editNoteText: '', editCover: null, editHits: [], editSearching: false,   // editCover null = untouched
@@ -786,10 +793,67 @@ function saveProfile() {
 }
 function guideDone() { try { return localStorage.getItem('rr.guideDone') === '1'; } catch (e) { return false; } }
 function setGuideDone() { try { localStorage.setItem('rr.guideDone', '1'); } catch (e) {} }
+// ----- push notifications ("친구가 읽기 시작했어요") -----
+function urlB64ToU8(b64) { const pad = '='.repeat((4 - b64.length % 4) % 4); const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(raw, c => c.charCodeAt(0)); }
+function pushSupported() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; }
+function isStandalone() { try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) { return false; } }
+function isIOS() { const ua = navigator.userAgent; return /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+function pushKey() { return 'rr.push:' + (S.room ? S.room.id : ''); }
+function pushState() {
+  if (!(window.RR_CONFIG || {}).vapidPublicKey || !store || store.kind !== 'supabase') return 'unsupported';
+  if (!pushSupported()) return isIOS() && !isStandalone() ? 'ios-install' : 'unsupported';
+  if (Notification.permission === 'denied') return 'denied';
+  try { if (localStorage.getItem(pushKey())) return 'on'; } catch (e) {}
+  return 'off';
+}
+async function enablePush() {
+  const cfg = window.RR_CONFIG || {}; if (!cfg.vapidPublicKey || !sbClient || !S.room) return;
+  S.pushBusy = true; S.pushErr = ''; render();
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') { S.pushBusy = false; S.pushErr = perm === 'denied' ? '알림이 차단됐어요. 설정에서 이 앱의 알림을 허용해 주세요.' : '알림 허용을 취소했어요.'; render(); return; }
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToU8(cfg.vapidPublicKey) });
+    const j = sub.toJSON();
+    const { error } = await sbClient.from('rr_push').upsert({ reader_id: S.me, room_id: S.room.id, endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth }, { onConflict: 'reader_id,endpoint' });
+    if (error) throw error;
+    try { localStorage.setItem(pushKey(), j.endpoint); } catch (e) {}
+  } catch (e) { console.error(e); S.pushErr = '알림을 켜지 못했어요. 잠시 후 다시 시도해 주세요.'; }
+  S.pushBusy = false; render();
+}
+async function disablePush() {
+  S.pushBusy = true; S.pushErr = ''; render();
+  try {
+    let endpoint = ''; try { endpoint = localStorage.getItem(pushKey()) || ''; } catch (e) {}
+    if (sbClient && endpoint) await sbClient.from('rr_push').delete().eq('reader_id', S.me).eq('endpoint', endpoint);
+    try { localStorage.removeItem(pushKey()); } catch (e) {}
+  } catch (e) { console.error(e); }
+  S.pushBusy = false; render();
+}
+// Ask the server to push "<me> started reading" to the others in this room; at most once per 10 minutes from this device.
+function notifyFriends() {
+  const cfg = window.RR_CONFIG || {}; if (!cfg.notifyUrl || !S.room || !store || store.kind !== 'supabase') return;
+  let last = 0; try { last = +localStorage.getItem('rr.notifiedAt') || 0; } catch (e) {}
+  if (Date.now() - last < 10 * 60 * 1000) return;
+  try { localStorage.setItem('rr.notifiedAt', String(Date.now())); } catch (e) {}
+  const me = myReader();
+  fetch(cfg.notifyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: cfg.anonKey, Authorization: 'Bearer ' + cfg.anonKey },
+    body: JSON.stringify({ room: S.room.id, from: S.me, name: me ? me.nickname : '', roomName: S.room.name }) }).catch(() => {});
+}
+function pushHtml() {
+  const st = pushState();
+  if (st === 'on') return `<div class="push-row"><span>친구가 읽기 시작하면 알려줘요 · <b>켜짐</b></span><button type="button" class="mini" id="push-off" ${S.pushBusy ? 'disabled' : ''}>끄기</button></div><p class="note">이 기기에서만 켜져요. 다른 폰은 거기서 따로 켜면 돼요.</p>`;
+  if (st === 'off') return `<button type="button" class="btn ghost" id="push-on" ${S.pushBusy ? 'disabled' : ''}>${S.pushBusy ? '켜는 중…' : '친구가 읽기 시작하면 알려주기'}</button>${S.pushErr ? `<p class="note err">${esc(S.pushErr)}</p>` : ''}`;
+  if (st === 'ios-install') return `<p class="note">홈 화면에 추가한 뒤 그 앱에서 열면 알림을 켤 수 있어요. (공유 ⬆︎ → 홈 화면에 추가)</p>`;
+  if (st === 'denied') return `<p class="note">알림이 차단돼 있어요. 설정에서 이 앱의 알림을 허용하면 켤 수 있어요.</p>`;
+  return `<p class="note">이 브라우저는 알림을 지원하지 않아요.</p>`;
+}
 function startReading() {
   setGuideDone();
   const now = Date.now();
   act(() => store.updateReader({ status: 'reading', startedAt: now, accum: 0, sessionStartedAt: now, updatedAt: now }));
+  notifyFriends();
 }
 function pauseReading() {
   const r = myReader(); if (!r || r.status !== 'reading') return;
@@ -1069,6 +1133,7 @@ function renderSetup() {
       ${r ? `<button class="btn ghost" id="setup-cancel">홈으로</button>` : ''}
       <button class="btn primary" id="setup-save" ${S.setupAnimal ? '' : 'disabled'}>${r ? '저장' : '입장하기'}</button>
     </div>
+    ${store && store.kind === 'supabase' && r ? `<div class="field push"><label>알림</label>${pushHtml()}</div>` : ''}
     ${store && store.kind === 'supabase' ? (r ? `<div class="handoff">
       <div class="hd">이어쓰기 코드 <b id="my-code">${esc(myCode())}</b> <button type="button" class="mini" id="copy-code">복사</button></div>
       <p>다른 폰이나 홈 화면 앱에서 처음 열 때 이 코드를 넣으면 같은 캐릭터와 기록을 이어서 써요.</p>
@@ -1252,6 +1317,8 @@ function bind() {
   $('#room-name')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); createRoom(); } });
   $('#room-join')?.addEventListener('click', joinRoom);
   $('#room-code')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); joinRoom(); } });
+  $('#push-on')?.addEventListener('click', enablePush);
+  $('#push-off')?.addEventListener('click', disablePush);
   $('#nick')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveProfile(); } });
   app.querySelectorAll('[data-skin]').forEach(b => b.addEventListener('click', () => { S.skin = b.dataset.skin === 'soft' ? 'soft' : 'line'; try { localStorage.setItem('rr.skin', S.skin); } catch (e) {} document.body.classList.toggle('skin-soft', S.skin === 'soft'); render(); }));
   $('#setup-cancel')?.addEventListener('click', () => { S.phase = 'app'; render(); });
