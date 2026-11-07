@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<script>window.APP_VERSION = "20261107203501";</script>
+<script>window.APP_VERSION = "20261107203848";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -106,6 +106,7 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .tl-card .edit { position: absolute; top: 6px; right: 30px; background: none; border: 0; color: var(--ink-soft); padding: 3px 4px; line-height: 1; }
 .tl-card .edit svg { width: 15px; height: 15px; display: block; }
 .tl-card .edit:hover { color: var(--accent-deep); }
+.tl-edit input { display: block; width: 100%; box-sizing: border-box; margin-top: 2px; font: inherit; font-size: 18px; line-height: 1.25; border: 1.5px solid var(--line); border-radius: 10px; padding: 6px 9px; background: var(--paper); color: var(--ink); }
 .tl-edit textarea { display: block; width: 100%; box-sizing: border-box; margin-top: 4px; font: inherit; font-size: 16px; line-height: 1.35; border: 1.5px solid var(--line); border-radius: 10px; padding: 6px 9px; resize: none; background: var(--paper); color: var(--ink); }
 .tl-card .cf { margin-top: 6px; font-size: 13px; color: var(--ink-soft); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .tl-card .cf button { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; font-size: 13px; padding: 1px 9px; color: var(--ink); line-height: 1.4; }
@@ -463,7 +464,8 @@ const S = {
   roomOk: false,
   modal: null,            // {seconds, startedAt, endedAt, title, note, file, preview, err, saving}
   confirmDel: null,      // session id awaiting delete confirmation
-  editNote: null,        // session id whose memo is being edited
+  editNote: null,        // session id being edited (title + memo)
+  editTitle: '', editNoteText: '', editCover: null, editHits: [], editSearching: false,   // editCover null = untouched
   setupAnimal: null,
   handoff: { open: false, code: '', err: '', busy: false },
   chat: { open: false, msgs: [] },   // msgs: {id, uid, text, at}; ephemeral, broadcast only
@@ -601,7 +603,7 @@ function makeSupabaseStore(sb, uid, roomId) {
       await loadSessions();
     },
     async updateSession(id, patch) {
-      const { error } = await sb.from('rr_sessions').update({ note: patch.note }).eq('id', id).eq('reader_id', rid);
+      const { error } = await sb.from('rr_sessions').update({ title: patch.title, note: patch.note, cover_url: patch.coverUrl || null }).eq('id', id).eq('reader_id', rid);
       if (error) throw error;
       await loadSessions();
     },
@@ -767,13 +769,31 @@ function saveNote(id) {
   const mine = (S.sessions.get(S.me) || []).find(x => x.id === id);
   if (!mine) return;
   const note = ($('#note-edit')?.value || '').trim();
-  S.editNote = null;
-  if (note === (mine.note || '')) { render(); return; }
-  mine.note = note;  // show it right away; the reload below confirms it
+  const title = ($('#title-edit')?.value || '').trim() || mine.title;
+  // cover: a picked search result wins; a changed title without a pick drops the old cover
+  const coverUrl = S.editCover !== null ? S.editCover : (title === mine.title ? mine.coverUrl : '');
+  S.editNote = null; S.editHits = []; S.editCover = null; searchSeq++;
+  if (note === (mine.note || '') && title === mine.title && coverUrl === (mine.coverUrl || '')) { render(); return; }
+  mine.note = note; mine.title = title; mine.coverUrl = coverUrl;  // show it right away; the reload below confirms it
   act(async () => {
-    await store.updateSession(id, { note });
+    await store.updateSession(id, { title, note, coverUrl });
     render();
   });
+}
+function renderEditSuggest() {
+  const w = $('.edit-suggest'); if (!w) return;
+  w.innerHTML = suggestHtml({ hits: S.editHits, searching: S.editSearching });
+  w.querySelectorAll('[data-hit]').forEach(b => b.addEventListener('click', () => {
+    const h = S.editHits[+b.dataset.hit]; if (!h) return;
+    S.editTitle = h.title; S.editCover = h.thumbnail || ''; S.editHits = []; S.editSearching = false;
+    const ti = $('#title-edit'); if (ti) ti.value = h.title;
+    const card = w.closest('.tl-card'), c = card && card.querySelector('.tl-cover');
+    if (c && S.editCover) { const img = document.createElement('img'); img.className = 'tl-cover'; img.alt = ''; img.src = S.editCover; c.replaceWith(img); }
+    renderEditSuggest(); $('#note-edit')?.focus();
+  }));
+}
+function editSearch(q) {
+  fetchHits(q, () => { S.editSearching = true; renderEditSuggest(); }, hits => { S.editHits = hits; S.editSearching = false; renderEditSuggest(); });
 }
 function deleteSession(id) {
   const mine = (S.sessions.get(S.me) || []).find(x => x.id === id);
@@ -948,9 +968,8 @@ function renderPerson() {
         <div class="tl-date">${fmtWhen(sess.endedAt)}</div>
         <div class="tl-card ${mine ? 'mine' : ''}">
           ${sess.coverUrl ? `<img class="tl-cover" src="${esc(sess.coverUrl)}" alt="">` : `<span class="tl-cover none"></span>`}
-          <div class="tl-body"><div class="tl-title ${sess.title ? '' : 'un'}">${sess.title ? esc(sess.title) : '제목 없음'}</div>
-            ${editing ? `<div class="tl-edit"><textarea id="note-edit" maxlength="300" rows="2" placeholder="한 줄 소감">${esc(sess.note)}</textarea><div class="cf"><button type="button" class="yes" id="note-save">저장</button><button type="button" id="note-cancel">취소</button></div></div>`
-              : sess.note ? `<div class="tl-note">${esc(sess.note)}</div>` : ''}
+          <div class="tl-body">${editing ? `<div class="tl-edit"><input id="title-edit" maxlength="80" value="${esc(S.editTitle)}" placeholder="책 제목" autocomplete="off"><div class="suggest-wrap edit-suggest"></div><textarea id="note-edit" maxlength="300" rows="2" placeholder="한 줄 소감">${esc(S.editNoteText)}</textarea><div class="cf"><button type="button" class="yes" id="note-save">저장</button><button type="button" id="note-cancel">취소</button></div></div>`
+              : `<div class="tl-title ${sess.title ? '' : 'un'}">${sess.title ? esc(sess.title) : '제목 없음'}</div>${sess.note ? `<div class="tl-note">${esc(sess.note)}</div>` : ''}`}
             ${confirming ? `<div class="cf">이 기록을 지울까요? <button type="button" class="yes" data-del-yes="${esc(sess.id)}">네</button><button type="button" data-del-no="1">아니오</button></div>` : ''}</div>
           ${mine && !confirming && !editing ? `<button type="button" class="edit" data-edit-note="${esc(sess.id)}" title="메모 고치기" aria-label="메모 고치기">${ICON.edit}</button><button type="button" class="x" data-del="${esc(sess.id)}" aria-label="이 기록 지우기">×</button>` : ''}
         </div>
@@ -1081,24 +1100,29 @@ function renderSuggest() {
   w.querySelectorAll('[data-hit]').forEach(b => b.addEventListener('click', () => pickHit(+b.dataset.hit)));
 }
 let searchTimer = null, searchSeq = 0;
-function searchBooks(q) {
+// Debounced book lookup shared by the finish sheet and the timeline editor.
+function fetchHits(q, onStart, onDone) {
   clearTimeout(searchTimer);
-  const m = S.modal; if (!m) return;
-  q = q.trim();
-  if (q.length < 1) { searchSeq++; m.hits = []; m.searching = false; renderSuggest(); return; }
+  q = (q || '').trim();
+  if (q.length < 1) { searchSeq++; onDone([]); return; }
   searchTimer = setTimeout(async () => {
     const seq = ++searchSeq;
-    m.searching = true; renderSuggest();
+    onStart();
+    let hits = [];
     try {
       const r = await fetch(BOOK_API + '?q=' + encodeURIComponent(q));
       const data = r.ok ? await r.json() : { hits: [] };
-      if (seq !== searchSeq || !S.modal) return;
       const seen = new Set();
-      S.modal.hits = (data.hits || []).filter(h => { const k = (h.title || '').trim() + '|' + (h.authors || []).join(','); if (seen.has(k)) return false; seen.add(k); return true; })
+      hits = (data.hits || []).filter(h => { const k = (h.title || '').trim() + '|' + (h.authors || []).join(','); if (seen.has(k)) return false; seen.add(k); return true; })
         .slice(0, 5).map(h => ({ ...h, thumbnail: (h.thumbnail || '').replace(/^http:/, 'https:') }));
-    } catch (e) { if (S.modal) S.modal.hits = []; }
-    if (S.modal) { S.modal.searching = false; renderSuggest(); }
+    } catch (e) {}
+    if (seq !== searchSeq) return;
+    onDone(hits);
   }, 350);
+}
+function searchBooks(q) {
+  if (!S.modal) return;
+  fetchHits(q, () => { if (S.modal) { S.modal.searching = true; renderSuggest(); } }, hits => { if (S.modal) { S.modal.hits = hits; S.modal.searching = false; renderSuggest(); } });
 }
 // Any other render (friend status, poll) waits until the IME composition ends.
 document.addEventListener('compositionstart', () => { S.composing = true; });
@@ -1176,9 +1200,13 @@ function bind() {
   app.querySelectorAll('[data-hit]').forEach(b => b.addEventListener('click', () => pickHit(+b.dataset.hit)));
   $('#s-note')?.addEventListener('input', e => { if (S.modal) S.modal.note = e.target.value; });
   app.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => { S.confirmDel = b.dataset.del; S.editNote = null; render(); }));
-  app.querySelectorAll('[data-edit-note]').forEach(b => b.addEventListener('click', () => { S.editNote = b.dataset.editNote; S.confirmDel = null; render(); setTimeout(() => { const t = $('#note-edit'); if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }, 30); }));
+  app.querySelectorAll('[data-edit-note]').forEach(b => b.addEventListener('click', () => { const sess = (S.sessions.get(S.me) || []).find(x => x.id === b.dataset.editNote); if (!sess) return; S.editNote = sess.id; S.editTitle = sess.title || ''; S.editNoteText = sess.note || ''; S.editCover = null; S.editHits = []; S.editSearching = false; S.confirmDel = null; render(); setTimeout(() => { const t = $('#note-edit'); if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }, 30); }));
+  $('#title-edit')?.addEventListener('input', e => { S.editTitle = e.target.value; S.editCover = null; editSearch(e.target.value); });
+  $('#title-edit')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('#note-edit')?.focus(); } });
+  $('#note-edit')?.addEventListener('input', e => { S.editNoteText = e.target.value; });
+  if (S.editNote) renderEditSuggest();
   $('#note-save')?.addEventListener('click', () => saveNote(S.editNote));
-  $('#note-cancel')?.addEventListener('click', () => { S.editNote = null; render(); });
+  $('#note-cancel')?.addEventListener('click', () => { S.editNote = null; S.editHits = []; S.editCover = null; searchSeq++; render(); });
   $('#note-edit')?.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveNote(S.editNote); } });
   app.querySelectorAll('[data-del-no]').forEach(b => b.addEventListener('click', () => { S.confirmDel = null; render(); }));
   app.querySelectorAll('[data-del-yes]').forEach(b => b.addEventListener('click', () => deleteSession(b.dataset.delYes)));
