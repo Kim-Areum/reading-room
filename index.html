@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#fcfbf8">
-<script>window.APP_VERSION = "20261107215652";</script>
+<script>window.APP_VERSION = "20261107220211";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -465,7 +465,7 @@ body.skin-soft .sprite.offline .ch { filter: url(#brush) grayscale(.5); }
 </svg>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
-<script src="config.js?v=20261107215652"></script>
+<script src="config.js?v=20261107220211"></script>
 <script>
 (() => {
 'use strict';
@@ -1143,7 +1143,7 @@ function renderSetup() {
     </div>
     <div class="field"><label for="nick">닉네임</label><input id="nick" maxlength="20" placeholder="예: 하루" value="${esc(r?.nickname || '')}" autocomplete="nickname"></div>
     <div class="btn-row">
-      ${r ? `<button class="btn ghost" id="setup-cancel">홈으로</button>` : ''}
+      ${r ? `<button class="btn ghost" id="setup-cancel">이전으로</button>` : ''}
       <button class="btn primary" id="setup-save" ${S.setupAnimal ? '' : 'disabled'}>${r ? '저장' : '입장하기'}</button>
     </div>
     ${store && store.kind === 'supabase' && !r ? `<div class="handoff">
