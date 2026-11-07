@@ -5,6 +5,7 @@ cd "$(dirname "$0")"
 V=$(date +%Y%m%d%H%M%S)
 echo "$V" > version.txt
 sed -i '' -E "s/window\.APP_VERSION = \"[^\"]*\"/window.APP_VERSION = \"$V\"/" index.html
+sed -i '' -E "s/const VERSION = '[^']*'/const VERSION = '$V'/" sw.js
 git add -A
 git commit -q -m "${1:-배포 $V}"
 git push -q origin main
