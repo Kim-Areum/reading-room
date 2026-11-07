@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<script>window.APP_VERSION = "20261107204555";</script>
+<script>window.APP_VERSION = "20261107205009";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -200,12 +200,16 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .chat-bar .send { width: 40px; height: 40px; border-radius: 999px; border: 0; background: var(--accent); color: var(--accent-ink); display: inline-flex; align-items: center; justify-content: center; padding: 0; }
 .chat-bar .send svg { width: 20px; height: 20px; }
 .chat-bar .close { background: none; border: 0; color: var(--ink-soft); font-size: 16px; padding: 6px; }
-.chat-box { position: absolute; top: 6px; right: max(12px, env(safe-area-inset-right, 0px)); width: min(56%, 260px); height: 86px; box-sizing: content-box; overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--paper); border: 1.5px solid var(--ink); border-radius: 12px; padding: 4px 0; z-index: 6; }
-.msg { display: flex; align-items: baseline; gap: 6px; padding: 4px 10px; font-size: 15px; line-height: 1.3; animation: msgin .25s ease-out; }
-.msg b { font-weight: 400; color: var(--ink-soft); font-size: 13px; white-space: nowrap; }
-.msg span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-.msg time { font-size: 11px; color: var(--ink-soft); white-space: nowrap; }
-.msg.mine span { color: var(--accent-deep); }
+.chat-box { position: absolute; top: 8px; right: max(12px, env(safe-area-inset-right, 0px)); width: min(58%, 260px); height: 86px; box-sizing: content-box; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; background: var(--paper); border: 1.5px solid var(--ink); border-radius: 14px 14px 14px 4px; padding: 3px 0; z-index: 6; box-shadow: 0 3px 0 rgba(42,33,80,.08); }
+.chat-box::-webkit-scrollbar { display: none; }
+.chat-box::before { content: ""; position: sticky; top: 0; display: block; height: 10px; margin-bottom: -10px; background: linear-gradient(var(--paper), rgba(255,255,255,0)); pointer-events: none; z-index: 1; }
+.msg { display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: 6px; padding: 4px 10px; font-size: 15px; line-height: 1.3; animation: msgin .25s ease-out; }
+.msg + .msg { border-top: 1px dashed var(--line); }
+.msg b { font-weight: 400; color: var(--ink-soft); font-size: 12px; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.msg span { min-width: 0; overflow-wrap: anywhere; }
+.msg time { font-size: 10px; color: var(--ink-soft); white-space: nowrap; opacity: .85; }
+.msg.mine b, .msg.mine span { color: var(--accent-deep); }
+.msg:last-child { background: rgba(196,182,245,.22); }
 @keyframes msgin { from { opacity: 0; transform: translateY(-6px) } to { opacity: 1; transform: none } }
 @media (prefers-reduced-motion: reduce) { .msg { animation: none; } }
 
@@ -847,15 +851,24 @@ function walkerFor(id, room) {
   }
   return w;
 }
+// The chat box (top right) is a no-go area: walkers neither aim for it nor stay under it.
+let noGo = null;
+function updateNoGo(room) {
+  const box = room.querySelector('#chat-box');
+  noGo = box ? { x1: box.offsetLeft - 6, y1: box.offsetTop - 6, x2: box.offsetLeft + box.offsetWidth + 6, y2: box.offsetTop + box.offsetHeight + 6 } : null;
+}
+function inNoGo(x, y) { return !!noGo && x < noGo.x2 && x + SPRITE_W > noGo.x1 && y < noGo.y2 && y + SPRITE_H > noGo.y1; }
 function newTarget(w, W, H, others) {
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 12; i++) {
     const tx = Math.random() * W, ty = Math.random() * H;
     const d = Math.hypot(tx - w.x, ty - w.y);
     if (d < 60) continue;
+    if (inNoGo(tx, ty)) continue;
     if (others.some(o => Math.hypot(o.x - tx, o.y - ty) < MIN_GAP)) continue;
     w.tx = tx; w.ty = ty; return;
   }
   w.tx = Math.random() * W; w.ty = Math.random() * H;
+  if (inNoGo(w.tx, w.ty)) w.ty = Math.min(H, noGo.y2);   // last resort: just below the box
 }
 let lastTs = 0;
 function step(ts) {
@@ -865,12 +878,14 @@ function step(ts) {
   const W = Math.max(1, room.clientWidth - SPRITE_W), H = Math.max(1, room.clientHeight - SPRITE_H);
   const els = room.querySelectorAll('.sprite');
   const all = [...els].map(el => walkerFor(el.dataset.uid, room));
+  updateNoGo(room);
   els.forEach((el, i) => {
     const id = el.dataset.uid, w = all[i], r = S.readers.get(id);
     w.x = Math.min(w.x, W); w.y = Math.min(w.y, H); w.tx = Math.min(w.tx, W); w.ty = Math.min(w.ty, H);
     const canWalk = !REDUCED && r && (r.status || 'idle') === 'idle' && (id !== S.me || !S.modal) && isHere(id);
     w.moving = false;
     if (canWalk) {
+      if (inNoGo(w.x, w.y) && inNoGo(w.tx, w.ty)) newTarget(w, W, H, all.filter(o => o !== w));   // the box opened over us: walk out
       const dx = w.tx - w.x, dy = w.ty - w.y, d = Math.hypot(dx, dy);
       if (d < 1.5) {
         w.wait -= dt;
