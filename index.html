@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#fcfbf8">
-<script>window.APP_VERSION = "20261107213046";</script>
+<script>window.APP_VERSION = "20261107215652";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -124,6 +124,19 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 
 /* ----- setup ----- */
 .setup { padding-block: 12px; }
+.settings .srow { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: var(--paper); border: 1.5px solid var(--ink); border-radius: 16px; padding: 10px 14px; margin: 6px 0 22px; color: var(--ink); }
+.settings .srow .av { width: 44px; height: 48px; flex: none; }
+.settings .srow .av svg { width: 100%; height: 100%; display: block; }
+.settings .srow .t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.settings .srow .t b { font-weight: 400; font-size: 21px; line-height: 1.2; }
+.settings .srow .t small { font-size: 14px; color: var(--ink-soft); }
+.settings .srow .chev { font-size: 24px; color: var(--ink-soft); line-height: 1; }
+.settings .field { margin-bottom: 22px; }
+.settings .hd.code { display: flex; align-items: center; gap: 8px; font-size: 17px; }
+.settings .hd.code b { font-weight: 400; letter-spacing: 0.12em; background: var(--accent); color: var(--accent-ink); border-radius: 8px; padding: 1px 10px; font-size: 19px; }
+.settings .mini { border: 1.5px solid var(--line); background: var(--paper); border-radius: 999px; font-size: 14px; padding: 2px 10px; color: var(--ink); }
+.settings .note { margin: 4px 0 0; font-size: 14px; color: var(--ink-soft); }
+.settings .btn-row { margin-top: 8px; }
 .setup h1 { font-weight: 400; font-size: 30px; margin: 8px 0 2px; text-wrap: balance; }
 .setup p.lead { color: var(--ink-soft); margin: 0 0 20px; }
 .animal-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
@@ -452,7 +465,7 @@ body.skin-soft .sprite.offline .ch { filter: url(#brush) grayscale(.5); }
 </svg>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
-<script src="config.js?v=20261107213046"></script>
+<script src="config.js?v=20261107215652"></script>
 <script>
 (() => {
 'use strict';
@@ -1052,6 +1065,7 @@ function render() {
   if (S.phase === 'loading') body = `<div class="empty loading"><b>방에 들어가는 중</b>잠시만요.</div>`;
   else if (S.phase === 'rooms') body = renderRooms();
   else if (S.phase === 'setup') body = renderSetup();
+  else if (S.phase === 'settings') body = renderSettings();
   else body = S.tab === 'now' ? renderRoom() : (S.person && S.readers.has(S.person) ? renderPerson() : renderLog());
   document.body.classList.toggle('scroll', !(S.phase === 'app' && S.tab === 'now'));
   app.innerHTML = `
@@ -1060,7 +1074,7 @@ function render() {
       ${S.phase === 'app' ? `<div class="icons" role="tablist">
         <button class="iconbtn" role="tab" data-tab="now" aria-selected="${S.tab === 'now'}" title="지금" aria-label="지금">${ICON.now}</button>
         <button class="iconbtn" role="tab" data-tab="log" aria-selected="${S.tab === 'log'}" title="기록" aria-label="기록">${ICON.log}</button>
-        <button class="iconbtn profile" id="edit-profile" title="프로필 바꾸기" aria-label="프로필 바꾸기">${ICON.profile}</button>
+        <button class="iconbtn profile" id="edit-profile" title="설정" aria-label="설정">${ICON.profile}</button>
       </div>` : ''}
     </header>
     ${S.storeNote ? `<div class="notice">${esc(S.storeNote)}</div>` : ''}
@@ -1123,26 +1137,34 @@ function renderSetup() {
   if (!S.setupAnimal) { S.setupAnimal = r?.animal || null; try { S.setupAnimal = S.setupAnimal || localStorage.getItem('rr.lastAnimal'); } catch (e) {} }
   return `<section class="setup">
     <h1>${r ? '프로필 바꾸기' : '어떤 모습으로 들어갈까요?'}</h1>
-    <p class="lead">${S.room ? esc(S.room.name) + ' 방에서 쓸 ' : ''}캐릭터 하나와 닉네임을 정하면 방에 들어갈 수 있어요.</p>
+    <p class="lead">${r ? '캐릭터와 닉네임을 바꿀 수 있어요.' : (S.room ? esc(S.room.name) + ' 방에서 쓸 ' : '') + '캐릭터 하나와 닉네임을 정하면 방에 들어갈 수 있어요.'}</p>
     <div class="animal-grid" role="group" aria-label="캐릭터 고르기">
       ${ANIMALS.map(([k, n]) => `<button type="button" class="animal-pick" data-animal="${k}" aria-pressed="${S.setupAnimal === k}">${charSvg(k)}<span>${n}</span></button>`).join('')}
     </div>
-    <div class="field"><label>그림 느낌</label><div class="chips" role="group" aria-label="스킨"><button type="button" class="chip ${S.skin !== 'soft' ? 'on' : ''}" data-skin="line">선 그림</button><button type="button" class="chip ${S.skin === 'soft' ? 'on' : ''}" data-skin="soft">수채 느낌</button></div></div>
     <div class="field"><label for="nick">닉네임</label><input id="nick" maxlength="20" placeholder="예: 하루" value="${esc(r?.nickname || '')}" autocomplete="nickname"></div>
     <div class="btn-row">
       ${r ? `<button class="btn ghost" id="setup-cancel">홈으로</button>` : ''}
       <button class="btn primary" id="setup-save" ${S.setupAnimal ? '' : 'disabled'}>${r ? '저장' : '입장하기'}</button>
     </div>
-    ${store && store.kind === 'supabase' && r ? `<div class="field push"><label>알림</label>${pushHtml()}</div>` : ''}
-    ${store && store.kind === 'supabase' ? (r ? `<div class="handoff">
-      <div class="hd">이어쓰기 코드 <b id="my-code">${esc(myCode())}</b> <button type="button" class="mini" id="copy-code">복사</button></div>
-      <p>다른 폰이나 홈 화면 앱에서 처음 열 때 이 코드를 넣으면 같은 캐릭터와 기록을 이어서 써요.</p>
-    </div>` : `<div class="handoff">
+    ${store && store.kind === 'supabase' && !r ? `<div class="handoff">
       ${S.handoff.open ? `<div class="hd">이어쓰기 코드</div>
         <div class="code-row"><input id="handoff-code" maxlength="12" placeholder="예: k3v6q2rt" value="${esc(S.handoff.code)}" autocapitalize="none" autocomplete="off" spellcheck="false"><button type="button" class="btn" id="handoff-go" ${S.handoff.busy ? 'disabled' : ''}>${S.handoff.busy ? '확인 중…' : '이어받기'}</button></div>
         ${S.handoff.err ? `<p class="err">${esc(S.handoff.err)}</p>` : `<p>전에 쓰던 기기의 프로필 화면에 적힌 코드예요.</p>`}`
       : `<button type="button" class="link" id="handoff-open">다른 기기에서 쓰던 캐릭터가 있어요</button>`}
-    </div>`) : ''}
+    </div>` : ''}
+  </section>`;
+}
+function renderSettings() {
+  const r = myReader(); if (!r) { S.phase = 'setup'; return renderSetup(); }
+  return `<section class="setup settings">
+    <h1>설정</h1>
+    <button type="button" class="srow" id="go-profile"><span class="av">${charSvg(r.animal)}</span><span class="t"><b>${esc(r.nickname || '이름 없음')}</b><small>프로필 바꾸기 · 캐릭터와 닉네임</small></span><span class="chev">›</span></button>
+    <div class="field"><label>그림 느낌</label><div class="chips" role="group" aria-label="스킨"><button type="button" class="chip ${S.skin !== 'soft' ? 'on' : ''}" data-skin="line">선 그림</button><button type="button" class="chip ${S.skin === 'soft' ? 'on' : ''}" data-skin="soft">수채 느낌</button></div></div>
+    ${store && store.kind === 'supabase' ? `<div class="field push"><label>알림</label>${pushHtml()}</div>` : ''}
+    ${store && store.kind === 'supabase' ? `<div class="field"><label>이어쓰기 코드</label>
+      <div class="hd code"><b id="my-code">${esc(myCode())}</b> <button type="button" class="mini" id="copy-code">복사</button></div>
+      <p class="note">다른 폰이나 홈 화면 앱에서 처음 열 때 이 코드를 넣으면 같은 캐릭터와 기록을 이어서 써요.</p></div>` : ''}
+    <div class="btn-row"><button class="btn ghost" id="settings-home">홈으로</button></div>
   </section>`;
 }
 function isHere(id) { return !S.roomOk || id === S.me || S.online.has(id); }
@@ -1321,7 +1343,9 @@ function bind() {
   $('#push-off')?.addEventListener('click', disablePush);
   $('#nick')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveProfile(); } });
   app.querySelectorAll('[data-skin]').forEach(b => b.addEventListener('click', () => { S.skin = b.dataset.skin === 'soft' ? 'soft' : 'line'; try { localStorage.setItem('rr.skin', S.skin); } catch (e) {} document.body.classList.toggle('skin-soft', S.skin === 'soft'); render(); }));
-  $('#setup-cancel')?.addEventListener('click', () => { S.phase = 'app'; render(); });
+  $('#setup-cancel')?.addEventListener('click', () => { S.phase = myReader() ? 'settings' : 'app'; render(); });
+  $('#settings-home')?.addEventListener('click', () => { S.phase = 'app'; render(); });
+  $('#go-profile')?.addEventListener('click', () => { S.setupAnimal = myReader()?.animal || null; S.phase = 'setup'; render(); });
   $('#copy-code')?.addEventListener('click', async () => { const code = myCode(); try { await navigator.clipboard.writeText(code); $('#copy-code').textContent = '복사됨'; } catch (e) { const r = document.createRange(); r.selectNodeContents($('#my-code')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } });
   $('#handoff-open')?.addEventListener('click', () => { S.handoff.open = true; render(); setTimeout(() => $('#handoff-code')?.focus(), 30); });
   $('#handoff-code')?.addEventListener('input', e => { S.handoff.code = e.target.value; });
@@ -1332,7 +1356,7 @@ function bind() {
   $('#chat-close')?.addEventListener('click', () => { S.chat.open = false; render(); });
   $('#chat-form')?.addEventListener('submit', e => { e.preventDefault(); sendChat(); });
   const box = $('#chat-box'); if (box) box.scrollTop = box.scrollHeight;
-  $('#edit-profile')?.addEventListener('click', () => { S.setupAnimal = myReader()?.animal || null; S.phase = 'setup'; render(); });
+  $('#edit-profile')?.addEventListener('click', () => { S.setupAnimal = myReader()?.animal || null; S.phase = myReader() ? 'settings' : 'setup'; render(); });
   app.querySelectorAll('[data-tab]').forEach(t => t.addEventListener('click', () => { S.tab = t.dataset.tab; S.person = null; render(); }));
   app.querySelectorAll('[data-book="1"]').forEach(b => b.addEventListener('click', () => {
     const r = myReader(); if (!r) return;
