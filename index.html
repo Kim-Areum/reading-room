@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<script>window.APP_VERSION = "20261106222120";</script>
+<script>window.APP_VERSION = "20261107203501";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -94,7 +94,7 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .tl::before { content: ""; position: absolute; left: -20px; top: 7px; width: 10px; height: 10px; border-radius: 50%; background: var(--paper); border: 2px solid var(--ink); }
 .tl-date { font-size: 13px; color: var(--ink-soft); margin-bottom: 4px; font-variant-numeric: tabular-nums; }
 .tl-card { position: relative; display: flex; gap: 10px; align-items: flex-start; border: 1.5px solid var(--ink); border-radius: 14px; padding: 9px 12px; }
-.tl-card.mine { padding-right: 30px; }
+.tl-card.mine { padding-right: 58px; }
 .tl-cover { width: 40px; height: 58px; object-fit: cover; border: 1.5px solid var(--ink); border-radius: 2px 4px 4px 2px; flex: none; }
 .tl-cover.none { background: var(--accent); display: block; }
 .tl-body { min-width: 0; flex: 1; }
@@ -103,6 +103,10 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .tl-note { font-size: 16px; line-height: 1.35; margin-top: 3px; overflow-wrap: anywhere; }
 .tl-card .x { position: absolute; top: 6px; right: 8px; background: none; border: 0; color: var(--ink-soft); font-size: 16px; line-height: 1; padding: 2px 4px; }
 .tl-card .x:hover { color: var(--accent-deep); }
+.tl-card .edit { position: absolute; top: 6px; right: 30px; background: none; border: 0; color: var(--ink-soft); padding: 3px 4px; line-height: 1; }
+.tl-card .edit svg { width: 15px; height: 15px; display: block; }
+.tl-card .edit:hover { color: var(--accent-deep); }
+.tl-edit textarea { display: block; width: 100%; box-sizing: border-box; margin-top: 4px; font: inherit; font-size: 16px; line-height: 1.35; border: 1.5px solid var(--line); border-radius: 10px; padding: 6px 9px; resize: none; background: var(--paper); color: var(--ink); }
 .tl-card .cf { margin-top: 6px; font-size: 13px; color: var(--ink-soft); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .tl-card .cf button { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; font-size: 13px; padding: 1px 9px; color: var(--ink); line-height: 1.4; }
 .tl-card .cf button.yes { border-color: var(--accent-deep); color: var(--accent-deep); }
@@ -459,6 +463,7 @@ const S = {
   roomOk: false,
   modal: null,            // {seconds, startedAt, endedAt, title, note, file, preview, err, saving}
   confirmDel: null,      // session id awaiting delete confirmation
+  editNote: null,        // session id whose memo is being edited
   setupAnimal: null,
   handoff: { open: false, code: '', err: '', busy: false },
   chat: { open: false, msgs: [] },   // msgs: {id, uid, text, at}; ephemeral, broadcast only
@@ -595,6 +600,11 @@ function makeSupabaseStore(sb, uid, roomId) {
       if (error) throw error;
       await loadSessions();
     },
+    async updateSession(id, patch) {
+      const { error } = await sb.from('rr_sessions').update({ note: patch.note }).eq('id', id).eq('reader_id', rid);
+      if (error) throw error;
+      await loadSessions();
+    },
   };
 }
 function makeLocalStore() {
@@ -613,6 +623,7 @@ function makeLocalStore() {
     async updateReader(p) { data.reader = { ...(data.reader || {}), ...p }; save(); pushR(); },
     async addSession(s) { data.sessions.push({ id: String(Date.now()), ...s }); save(); pushS(); },
     async deleteSession(id) { data.sessions = data.sessions.filter(x => x.id !== id); save(); pushS(); },
+    async updateSession(id, patch) { data.sessions = data.sessions.map(x => x.id === id ? { ...x, ...patch } : x); save(); pushS(); },
   };
 }
 
@@ -751,6 +762,18 @@ function discardSession() {
   S.modal = null;
   act(async () => { await store.updateReader({ status: 'idle', accum: 0, startedAt: null, sessionStartedAt: null, updatedAt: Date.now() }); render(); });
   render();
+}
+function saveNote(id) {
+  const mine = (S.sessions.get(S.me) || []).find(x => x.id === id);
+  if (!mine) return;
+  const note = ($('#note-edit')?.value || '').trim();
+  S.editNote = null;
+  if (note === (mine.note || '')) { render(); return; }
+  mine.note = note;  // show it right away; the reload below confirms it
+  act(async () => {
+    await store.updateSession(id, { note });
+    render();
+  });
 }
 function deleteSession(id) {
   const mine = (S.sessions.get(S.me) || []).find(x => x.id === id);
@@ -920,14 +943,16 @@ function renderPerson() {
   return `<section class="person">
     <div class="p-head"><button type="button" class="back" id="person-back" aria-label="책장으로">←</button><div class="av">${charSvg(r.animal)}</div><div class="who"><div class="n">${esc(r.nickname || '이름 없음')}${mine ? '<small>나</small>' : ''}</div>${total ? `<div class="tot">${fmtDur(total)}</div>` : ''}</div></div>
     ${list.length ? `<ol class="timeline">${list.map(sess => {
-      const confirming = S.confirmDel === sess.id;
+      const confirming = S.confirmDel === sess.id, editing = mine && S.editNote === sess.id;
       return `<li class="tl">
         <div class="tl-date">${fmtWhen(sess.endedAt)}</div>
         <div class="tl-card ${mine ? 'mine' : ''}">
           ${sess.coverUrl ? `<img class="tl-cover" src="${esc(sess.coverUrl)}" alt="">` : `<span class="tl-cover none"></span>`}
-          <div class="tl-body"><div class="tl-title ${sess.title ? '' : 'un'}">${sess.title ? esc(sess.title) : '제목 없음'}</div>${sess.note ? `<div class="tl-note">${esc(sess.note)}</div>` : ''}
+          <div class="tl-body"><div class="tl-title ${sess.title ? '' : 'un'}">${sess.title ? esc(sess.title) : '제목 없음'}</div>
+            ${editing ? `<div class="tl-edit"><textarea id="note-edit" maxlength="300" rows="2" placeholder="한 줄 소감">${esc(sess.note)}</textarea><div class="cf"><button type="button" class="yes" id="note-save">저장</button><button type="button" id="note-cancel">취소</button></div></div>`
+              : sess.note ? `<div class="tl-note">${esc(sess.note)}</div>` : ''}
             ${confirming ? `<div class="cf">이 기록을 지울까요? <button type="button" class="yes" data-del-yes="${esc(sess.id)}">네</button><button type="button" data-del-no="1">아니오</button></div>` : ''}</div>
-          ${mine && !confirming ? `<button type="button" class="x" data-del="${esc(sess.id)}" aria-label="이 기록 지우기">×</button>` : ''}
+          ${mine && !confirming && !editing ? `<button type="button" class="edit" data-edit-note="${esc(sess.id)}" title="메모 고치기" aria-label="메모 고치기">${ICON.edit}</button><button type="button" class="x" data-del="${esc(sess.id)}" aria-label="이 기록 지우기">×</button>` : ''}
         </div>
       </li>`; }).join('')}</ol>` : `<div class="none">아직 기록이 없어요.</div>`}
   </section>`;
@@ -1142,7 +1167,7 @@ function bind() {
   }));
   app.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', () => ({ pause: pauseReading, resume: resumeReading, stop: stopReading })[b.dataset.act]()));
   app.querySelectorAll('[data-person]').forEach(c => { const open = () => { S.person = c.dataset.person; S.confirmDel = null; render(); window.scrollTo(0, 0); }; c.addEventListener('click', open); c.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } }); });
-  $('#person-back')?.addEventListener('click', () => { S.person = null; S.confirmDel = null; render(); });
+  $('#person-back')?.addEventListener('click', () => { S.person = null; S.confirmDel = null; S.editNote = null; render(); });
   $('#finish-form')?.addEventListener('submit', e => { e.preventDefault(); finishSession(); });
   $('#finish-cancel')?.addEventListener('click', cancelStop);
   $('#finish-discard')?.addEventListener('click', discardSession);
@@ -1150,7 +1175,11 @@ function bind() {
   $('#s-title')?.addEventListener('input', e => { if (S.modal) { S.modal.title = e.target.value; S.modal.cover = ''; if (S.modal.err && e.target.value.trim()) { S.modal.err = ''; $('.sheet .err')?.remove(); } searchBooks(e.target.value); } });
   app.querySelectorAll('[data-hit]').forEach(b => b.addEventListener('click', () => pickHit(+b.dataset.hit)));
   $('#s-note')?.addEventListener('input', e => { if (S.modal) S.modal.note = e.target.value; });
-  app.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => { S.confirmDel = b.dataset.del; render(); }));
+  app.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => { S.confirmDel = b.dataset.del; S.editNote = null; render(); }));
+  app.querySelectorAll('[data-edit-note]').forEach(b => b.addEventListener('click', () => { S.editNote = b.dataset.editNote; S.confirmDel = null; render(); setTimeout(() => { const t = $('#note-edit'); if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }, 30); }));
+  $('#note-save')?.addEventListener('click', () => saveNote(S.editNote));
+  $('#note-cancel')?.addEventListener('click', () => { S.editNote = null; render(); });
+  $('#note-edit')?.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveNote(S.editNote); } });
   app.querySelectorAll('[data-del-no]').forEach(b => b.addEventListener('click', () => { S.confirmDel = null; render(); }));
   app.querySelectorAll('[data-del-yes]').forEach(b => b.addEventListener('click', () => deleteSession(b.dataset.delYes)));
   if (S.modal && !S.modal.title && !document.activeElement?.id) setTimeout(() => $('#s-title')?.focus(), 50);
