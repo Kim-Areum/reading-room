@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<script>window.APP_VERSION = "20261107205457";</script>
+<script>window.APP_VERSION = "20261107205635";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -545,7 +545,7 @@ const SPRITE_W = 110, SPRITE_H = 170, MIN_GAP = 140;
 const BOOK_API = 'https://hanjul-khaki.vercel.app/api/public/books';
 
 S.tab = 'now';  // a room always opens on the home tab
-try { S.skin = localStorage.getItem('rr.skin') === 'soft' ? 'soft' : 'line'; } catch (e) { S.skin = 'line'; }
+try { S.skin = localStorage.getItem('rr.skin') === 'line' ? 'line' : 'soft'; } catch (e) { S.skin = 'soft'; }   // watercolor by default
 document.body.classList.toggle('skin-soft', S.skin === 'soft');
 
 // ---------- helpers ----------
