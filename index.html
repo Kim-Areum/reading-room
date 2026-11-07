@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<script>window.APP_VERSION = "20261107205009";</script>
+<script>window.APP_VERSION = "20261107205412";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -210,6 +210,22 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .msg time { font-size: 10px; color: var(--ink-soft); white-space: nowrap; opacity: .85; }
 .msg.mine b, .msg.mine span { color: var(--accent-deep); }
 .msg:last-child { background: rgba(196,182,245,.22); }
+/* ----- 수채 스킨: 외곽선 대신 파스텔 채움, 짙은 갈색 이목구비, 붓 자국 필터 ----- */
+body.skin-soft { --paper: #fcfbf8; }
+body.skin-soft .ch { --paper: var(--c1); --ln: var(--c2); --ft: #3d3230; --lw: 1.4; filter: url(#brush); }
+body.skin-soft .ch-bear { --c1: #cfa882; --c2: #b8906b; }
+body.skin-soft .ch-penguin { --c1: #a6a19c; --c2: #8c8782; }
+body.skin-soft .ch-dino { --c1: #b5c3a3; --c2: #9aab87; }
+body.skin-soft .ch-pig { --c1: #f1c9c1; --c2: #dfaaa1; }
+body.skin-soft .ch-hedgehog { --c1: #cdb79f; --c2: #b39c82; }
+body.skin-soft .ch-elephant { --c1: #c1bdc8; --c2: #a7a2b0; }
+body.skin-soft .ch-cow { --c1: #f2ece2; --c2: #d9d0c2; }
+body.skin-soft .ch-rabbit { --c1: #e2ddd7; --c2: #c9c2ba; }
+body.skin-soft .ch-cat { --c1: #ead6b4; --c2: #d3ba93; }
+body.skin-soft .ch-duck { --c1: #f3e2a9; --c2: #ddc98a; }
+body.skin-soft .ch-frog { --c1: #bfd1ab; --c2: #a3b98d; }
+body.skin-soft .ch-sheep { --c1: #f3eee6; --c2: #dcd4c8; }
+body.skin-soft .sprite.offline .ch { filter: url(#brush) grayscale(.5); }
 @keyframes msgin { from { opacity: 0; transform: translateY(-6px) } to { opacity: 1; transform: none } }
 @media (prefers-reduced-motion: reduce) { .msg { animation: none; } }
 
@@ -284,120 +300,120 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
   <defs>
     <!-- 공통: 굵기 3.4, 둥근 끝, 콩 모양 몸통. 표정은 동물마다 다르게 -->
     <symbol id="c-bear" viewBox="0 0 100 110"><!-- 곰: 기분 좋게 감은 눈 -->
-      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+      <g fill="var(--paper)" stroke="var(--ln, currentColor)" stroke-width="var(--lw, 3.4)" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="31" cy="25" r="8"/><circle cx="69" cy="25" r="8"/>
         <path d="M25 42 a25 25 0 0 1 50 0 v34 a25 25 0 0 1 -50 0 z"/>
         <path d="M25 66 q-7 4 -4 13" fill="none"/><path d="M75 66 q7 4 4 13" fill="none"/>
         <ellipse cx="39" cy="100" rx="8" ry="3.6"/><ellipse cx="61" cy="100" rx="8" ry="3.6"/>
       </g>
-      <path d="M37 44 q4 -5 8 0 M55 44 q4 -5 8 0 M46 55 q4 3 8 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-      <ellipse cx="50" cy="50" rx="3.4" ry="2.4" fill="currentColor"/>
+      <path d="M37 44 q4 -5 8 0 M55 44 q4 -5 8 0 M46 55 q4 3 8 0" fill="none" stroke="var(--ft, currentColor)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <ellipse cx="50" cy="50" rx="3.4" ry="2.4" fill="var(--ft, currentColor)"/>
     </symbol>
     <symbol id="c-penguin" viewBox="0 0 100 110"><!-- 펭귄: 또렷한 점 눈 -->
-      <ellipse cx="50" cy="104" rx="14" ry="2" fill="currentColor"/>
-      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+      <ellipse cx="50" cy="104" rx="14" ry="2" fill="var(--ft, currentColor)"/>
+      <g fill="var(--paper)" stroke="var(--ln, currentColor)" stroke-width="var(--lw, 3.4)" stroke-linecap="round" stroke-linejoin="round">
         <path d="M24 64 c0 -34 10 -46 26 -46 s26 12 26 46 c0 20 -12 30 -26 30 s-26 -10 -26 -30 z"/>
         <path d="M24 56 q-10 12 -3 26" fill="none"/><path d="M76 56 q10 12 3 26" fill="none"/>
         <ellipse cx="40" cy="98" rx="8" ry="3.4"/><ellipse cx="60" cy="98" rx="8" ry="3.4"/>
       </g>
-      <g fill="currentColor"><circle cx="42" cy="44" r="2.4"/><circle cx="58" cy="44" r="2.4"/><path d="M45 51 l5 5 l5 -5 z"/></g>
+      <g fill="var(--ft, currentColor)"><circle cx="42" cy="44" r="2.4"/><circle cx="58" cy="44" r="2.4"/><path d="M45 51 l5 5 l5 -5 z"/></g>
     </symbol>
     <symbol id="c-dino" viewBox="0 0 100 110"><!-- 공룡: 신나서 벌린 입 -->
-      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+      <g fill="var(--paper)" stroke="var(--ln, currentColor)" stroke-width="var(--lw, 3.4)" stroke-linecap="round" stroke-linejoin="round">
         <path d="M70 70 q16 -2 24 -16 q-4 18 -20 26" />
         <path d="M26 44 a24 24 0 0 1 48 0 v32 a24 24 0 0 1 -48 0 z"/>
         <path d="M38 21 q4 -8 8 -1 q4 -8 8 -1 q4 -8 8 0" fill="none"/>
         <path d="M26 66 q-7 4 -4 12" fill="none"/><path d="M74 66 q7 4 4 12" fill="none"/>
         <ellipse cx="40" cy="100" rx="8" ry="3.6"/><ellipse cx="60" cy="100" rx="8" ry="3.6"/>
       </g>
-      <g fill="currentColor"><circle cx="40" cy="42" r="2.4"/><circle cx="58" cy="42" r="2.4"/><ellipse cx="49" cy="54" rx="3.6" ry="4.6"/></g>
+      <g fill="var(--ft, currentColor)"><circle cx="40" cy="42" r="2.4"/><circle cx="58" cy="42" r="2.4"/><ellipse cx="49" cy="54" rx="3.6" ry="4.6"/></g>
     </symbol>
     <symbol id="c-pig" viewBox="0 0 100 110"><!-- 돼지: 윙크 -->
-      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+      <g fill="var(--paper)" stroke="var(--ln, currentColor)" stroke-width="var(--lw, 3.4)" stroke-linecap="round" stroke-linejoin="round">
         <path d="M82 60 q7 -6 2 -11 q-4 -3 -5 2" fill="none"/>
         <path d="M31 40 q-6 -10 -2 -15 q6 2 13 8 z"/><path d="M69 40 q6 -10 2 -15 q-6 2 -13 8 z"/>
         <ellipse cx="50" cy="62" rx="31" ry="28"/>
         <ellipse cx="50" cy="64" rx="9" ry="6.5"/>
         <ellipse cx="38" cy="92" rx="8" ry="3.6"/><ellipse cx="62" cy="92" rx="8" ry="3.6"/>
       </g>
-      <g fill="currentColor"><circle cx="37" cy="52" r="2.4"/><circle cx="46.5" cy="64" r="1.5"/><circle cx="53.5" cy="64" r="1.5"/></g>
-      <path d="M59 52 q4 -5 8 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <g fill="var(--ft, currentColor)"><circle cx="37" cy="52" r="2.4"/><circle cx="46.5" cy="64" r="1.5"/><circle cx="53.5" cy="64" r="1.5"/></g>
+      <path d="M59 52 q4 -5 8 0" fill="none" stroke="var(--ft, currentColor)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
     <symbol id="c-hedgehog" viewBox="0 0 100 110"><!-- 고슴도치: 실눈 웃음 -->
-      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+      <g fill="var(--paper)" stroke="var(--ln, currentColor)" stroke-width="var(--lw, 3.4)" stroke-linecap="round" stroke-linejoin="round">
         <path d="M24 64 L22 50 L32 54 L34 40 L44 48 L50 34 L58 46 L68 38 L70 52 L82 48 L80 62 L88 66 L80 72 L84 84 Q66 94 50 92 Q34 92 24 84 Z"/>
         <ellipse cx="50" cy="70" rx="26" ry="20"/>
         <path d="M24 70 q-9 0 -13 6 q5 5 13 4" />
         <ellipse cx="40" cy="92" rx="8" ry="3.4"/><ellipse cx="62" cy="92" rx="8" ry="3.4"/>
       </g>
-      <circle cx="11" cy="76" r="2" fill="currentColor"/>
-      <path d="M30 66 l5 2.5 l-5 2.5 M50 66 l-5 2.5 l5 2.5 M36 76 q4 3 8 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="11" cy="76" r="2" fill="var(--ft, currentColor)"/>
+      <path d="M30 66 l5 2.5 l-5 2.5 M50 66 l-5 2.5 l5 2.5 M36 76 q4 3 8 0" fill="none" stroke="var(--ft, currentColor)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
     <symbol id="c-elephant" viewBox="0 0 100 110"><!-- 코끼리: 차분히 내리깐 눈 -->
-      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+      <g fill="var(--paper)" stroke="var(--ln, currentColor)" stroke-width="var(--lw, 3.4)" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="24" cy="54" r="12"/><circle cx="76" cy="54" r="12"/>
         <ellipse cx="50" cy="60" rx="29" ry="28"/>
         <ellipse cx="39" cy="90" rx="8" ry="3.6"/><ellipse cx="61" cy="90" rx="8" ry="3.6"/>
       </g>
-      <path d="M50 64 q0 12 -6 18 q-4 4 -1 7" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+      <path d="M50 64 q0 12 -6 18 q-4 4 -1 7" fill="none" stroke="var(--ln, currentColor)" stroke-width="8" stroke-linecap="round"/>
       <path d="M50 64 q0 12 -6 18 q-4 4 -1 7" fill="none" stroke="var(--paper)" stroke-width="2.6" stroke-linecap="round"/>
-      <path d="M36 53 q4 5 8 0 M56 53 q4 5 8 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M36 53 q4 5 8 0 M56 53 q4 5 8 0" fill="none" stroke="var(--ft, currentColor)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
     <symbol id="c-cow" viewBox="0 0 100 110"><!-- 소: 진지한 눈썹 -->
-      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+      <g fill="var(--paper)" stroke="var(--ln, currentColor)" stroke-width="var(--lw, 3.4)" stroke-linecap="round" stroke-linejoin="round">
         <path d="M36 22 q-6 -8 0 -13" fill="none"/><path d="M64 22 q6 -8 0 -13" fill="none"/>
         <ellipse cx="27" cy="36" rx="8" ry="4.5"/><ellipse cx="73" cy="36" rx="8" ry="4.5"/>
         <path d="M25 42 a25 25 0 0 1 50 0 v34 a25 25 0 0 1 -50 0 z"/>
         <ellipse cx="50" cy="50" rx="11" ry="6.5"/>
         <ellipse cx="39" cy="100" rx="8" ry="3.6"/><ellipse cx="61" cy="100" rx="8" ry="3.6"/>
       </g>
-      <g fill="currentColor"><circle cx="41" cy="39" r="2.4"/><circle cx="59" cy="39" r="2.4"/><circle cx="46" cy="50" r="1.5"/><circle cx="54" cy="50" r="1.5"/>
+      <g fill="var(--ft, currentColor)"><circle cx="41" cy="39" r="2.4"/><circle cx="59" cy="39" r="2.4"/><circle cx="46" cy="50" r="1.5"/><circle cx="54" cy="50" r="1.5"/>
         <path d="M30 66 q6 -6 12 0 q-2 8 -10 7 q-4 -3 -2 -7 z"/><path d="M60 76 q6 -4 9 2 q-1 6 -8 5 q-3 -3 -1 -7 z"/></g>
-      <path d="M37 33 l7 -2 M63 33 l-7 -2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M37 33 l7 -2 M63 33 l-7 -2" fill="none" stroke="var(--ft, currentColor)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
     <symbol id="c-rabbit" viewBox="0 0 100 110"><!-- 토끼: 동그랗게 놀란 눈 -->
-      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+      <g fill="var(--paper)" stroke="var(--ln, currentColor)" stroke-width="var(--lw, 3.4)" stroke-linecap="round" stroke-linejoin="round">
         <ellipse cx="41" cy="19" rx="6.5" ry="15"/><ellipse cx="59" cy="19" rx="6.5" ry="15"/>
         <path d="M26 50 a24 24 0 0 1 48 0 v28 a24 24 0 0 1 -48 0 z"/>
         <path d="M26 70 q-6 4 -3 12" fill="none"/><path d="M74 70 q6 4 3 12" fill="none"/>
         <ellipse cx="40" cy="100" rx="8" ry="3.6"/><ellipse cx="60" cy="100" rx="8" ry="3.6"/>
       </g>
-      <circle cx="42" cy="47" r="3.2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="58" cy="47" r="3.2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M47 55 l3 2.5 l3 -2.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="50" cy="62" r="1.9" fill="currentColor"/>
+      <circle cx="42" cy="47" r="3.2" fill="none" stroke="var(--ft, currentColor)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="58" cy="47" r="3.2" fill="none" stroke="var(--ft, currentColor)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M47 55 l3 2.5 l3 -2.5" fill="none" stroke="var(--ft, currentColor)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="50" cy="62" r="1.9" fill="var(--ft, currentColor)"/>
     </symbol>
     <symbol id="c-cat" viewBox="0 0 100 110"><!-- 고양이: 감은 눈 + ω 입 -->
-      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+      <g fill="var(--paper)" stroke="var(--ln, currentColor)" stroke-width="var(--lw, 3.4)" stroke-linecap="round" stroke-linejoin="round">
         <path d="M30 34 l1 -17 l15 11" /><path d="M70 34 l-1 -17 l-15 11" />
         <path d="M74 84 q14 -2 13 -17" fill="none"/>
         <path d="M26 46 a24 24 0 0 1 48 0 v30 a24 24 0 0 1 -48 0 z"/>
         <path d="M26 68 q-6 4 -3 12" fill="none"/><path d="M74 68 q6 4 3 12" fill="none"/>
         <ellipse cx="40" cy="100" rx="8" ry="3.6"/><ellipse cx="60" cy="100" rx="8" ry="3.6"/>
       </g>
-      <path d="M36 46 q4 -5 8 0 M56 46 q4 -5 8 0 M44 53 q3 4 6 0 q3 4 6 0 M20 50 h-7 M20 56 h-7 M80 50 h7 M80 56 h7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M36 46 q4 -5 8 0 M56 46 q4 -5 8 0 M44 53 q3 4 6 0 q3 4 6 0 M20 50 h-7 M20 56 h-7 M80 50 h7 M80 56 h7" fill="none" stroke="var(--ft, currentColor)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
     <symbol id="c-duck" viewBox="0 0 100 110"><!-- 오리: 납작 부리, 멀뚱한 눈 -->
-      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+      <g fill="var(--paper)" stroke="var(--ln, currentColor)" stroke-width="var(--lw, 3.4)" stroke-linecap="round" stroke-linejoin="round">
         <path d="M46 32 q3 -9 9 -3" fill="none"/>
         <path d="M26 56 a24 24 0 0 1 48 0 v22 a24 24 0 0 1 -48 0 z"/>
         <path d="M26 70 q-9 6 -4 14" fill="none"/><path d="M74 70 q9 6 4 14" fill="none"/>
         <ellipse cx="50" cy="60" rx="11" ry="4.5"/>
         <ellipse cx="40" cy="102" rx="9" ry="3.4"/><ellipse cx="60" cy="102" rx="9" ry="3.4"/>
       </g>
-      <g fill="currentColor"><circle cx="40" cy="49" r="2.4"/><circle cx="60" cy="49" r="2.4"/></g>
+      <g fill="var(--ft, currentColor)"><circle cx="40" cy="49" r="2.4"/><circle cx="60" cy="49" r="2.4"/></g>
     </symbol>
     <symbol id="c-frog" viewBox="0 0 100 110"><!-- 개구리: 머리 위 왕눈이 + 활짝 웃음 -->
-      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+      <g fill="var(--paper)" stroke="var(--ln, currentColor)" stroke-width="var(--lw, 3.4)" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="36" cy="44" r="10"/><circle cx="64" cy="44" r="10"/>
         <ellipse cx="50" cy="70" rx="30" ry="25"/>
         <ellipse cx="34" cy="94" rx="10" ry="3.8"/><ellipse cx="66" cy="94" rx="10" ry="3.8"/>
       </g>
-      <g fill="currentColor"><circle cx="37" cy="45" r="2.6"/><circle cx="63" cy="45" r="2.6"/></g>
-      <path d="M34 70 q16 12 32 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="26" cy="74" r="1.6" fill="currentColor"/><circle cx="74" cy="74" r="1.6" fill="currentColor"/>
+      <g fill="var(--ft, currentColor)"><circle cx="37" cy="45" r="2.6"/><circle cx="63" cy="45" r="2.6"/></g>
+      <path d="M34 70 q16 12 32 0" fill="none" stroke="var(--ft, currentColor)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="26" cy="74" r="1.6" fill="var(--ft, currentColor)"/><circle cx="74" cy="74" r="1.6" fill="var(--ft, currentColor)"/>
     </symbol>
     <symbol id="c-sheep" viewBox="0 0 100 110"><!-- 양: 구름 몸, 졸린 눈 -->
-      <g fill="var(--paper)" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+      <g fill="var(--paper)" stroke="var(--ln, currentColor)" stroke-width="var(--lw, 3.4)" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="32" cy="50" r="12"/><circle cx="50" cy="42" r="13"/><circle cx="68" cy="50" r="12"/>
         <circle cx="76" cy="70" r="12"/><circle cx="64" cy="86" r="12"/><circle cx="40" cy="86" r="12"/><circle cx="24" cy="70" r="12"/>
         <circle cx="50" cy="66" r="24" stroke="none"/>
@@ -405,9 +421,14 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
         <ellipse cx="50" cy="64" rx="13" ry="15"/>
         <ellipse cx="40" cy="100" rx="8" ry="3.4"/><ellipse cx="60" cy="100" rx="8" ry="3.4"/>
       </g>
-      <path d="M44 62 h4 M52 62 h4 M47 71 q3 2 6 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M44 62 h4 M52 62 h4 M47 71 q3 2 6 0" fill="none" stroke="var(--ft, currentColor)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
-  </defs>
+      <!-- 수채 스킨: 가장자리를 붓 자국처럼 살짝 흔든다 -->
+    <filter id="brush" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+</defs>
 </svg>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
@@ -525,6 +546,8 @@ const SPRITE_W = 110, SPRITE_H = 170, MIN_GAP = 140;
 const BOOK_API = 'https://hanjul-khaki.vercel.app/api/public/books';
 
 S.tab = 'now';  // a room always opens on the home tab
+try { S.skin = localStorage.getItem('rr.skin') === 'soft' ? 'soft' : 'line'; } catch (e) { S.skin = 'line'; }
+document.body.classList.toggle('skin-soft', S.skin === 'soft');
 
 // ---------- helpers ----------
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -553,7 +576,7 @@ function elapsedOf(r, now = Date.now()) {
 }
 function charSvg(animal) {
   const id = ANIMAL_NAME[animal] ? animal : 'bear';
-  return `<svg viewBox="0 0 100 110" role="img" aria-label="${ANIMAL_NAME[id]}"><use href="#c-${id}"/></svg>`;
+  return `<svg class="ch ch-${id}" viewBox="0 0 100 110" role="img" aria-label="${ANIMAL_NAME[id]}"><use href="#c-${id}"/></svg>`;
 }
 function hash(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; }
 // ---------- stores ----------
@@ -1000,6 +1023,7 @@ function renderSetup() {
     <div class="animal-grid" role="group" aria-label="캐릭터 고르기">
       ${ANIMALS.map(([k, n]) => `<button type="button" class="animal-pick" data-animal="${k}" aria-pressed="${S.setupAnimal === k}">${charSvg(k)}<span>${n}</span></button>`).join('')}
     </div>
+    <div class="field"><label>그림 느낌</label><div class="chips" role="group" aria-label="스킨"><button type="button" class="chip ${S.skin !== 'soft' ? 'on' : ''}" data-skin="line">선 그림</button><button type="button" class="chip ${S.skin === 'soft' ? 'on' : ''}" data-skin="soft">수채 느낌</button></div></div>
     <div class="field"><label for="nick">닉네임</label><input id="nick" maxlength="20" placeholder="예: 하루" value="${esc(r?.nickname || '')}" autocomplete="nickname"></div>
     <div class="btn-row">
       ${r ? `<button class="btn ghost" id="setup-cancel">홈으로</button>` : ''}
@@ -1187,6 +1211,7 @@ function bind() {
   $('#room-join')?.addEventListener('click', joinRoom);
   $('#room-code')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); joinRoom(); } });
   $('#nick')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveProfile(); } });
+  app.querySelectorAll('[data-skin]').forEach(b => b.addEventListener('click', () => { S.skin = b.dataset.skin === 'soft' ? 'soft' : 'line'; try { localStorage.setItem('rr.skin', S.skin); } catch (e) {} document.body.classList.toggle('skin-soft', S.skin === 'soft'); render(); }));
   $('#setup-cancel')?.addEventListener('click', () => { S.phase = 'app'; render(); });
   $('#copy-code')?.addEventListener('click', async () => { const code = myCode(); try { await navigator.clipboard.writeText(code); $('#copy-code').textContent = '복사됨'; } catch (e) { const r = document.createRange(); r.selectNodeContents($('#my-code')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } });
   $('#handoff-open')?.addEventListener('click', () => { S.handoff.open = true; render(); setTimeout(() => $('#handoff-code')?.focus(), 30); });
