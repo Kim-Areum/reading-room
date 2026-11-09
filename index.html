@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#fcfbf8">
-<script>window.APP_VERSION = "20261109221441";</script>
+<script>window.APP_VERSION = "20261109221903";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -187,6 +187,8 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .room { position: relative; flex: 1; min-height: 360px; overflow: hidden; margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); }
 .room-foot { position: absolute; left: 0; right: 0; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 15px; color: var(--ink-soft); pointer-events: none; padding: 0 24px; }
 .sprite { position: absolute; left: 0; top: 0; width: 110px; display: flex; flex-direction: column; align-items: center; will-change: transform; --face: 1; --bob: 0px; }
+.sprite:not(.me) { pointer-events: none; }   /* friends have nothing to tap; never let them block my buttons */
+.sprite.me { z-index: 2; }
 .sprite.offline { opacity: 0.45; filter: grayscale(1); }
 .sprite.offline .book { opacity: 0.15; }
 .sprite .lamp { position: absolute; top: 12px; right: 22px; width: 9px; height: 9px; border-radius: 50%; background: #4cc96f; box-shadow: 0 0 0 3px rgba(76,201,111,.22), 0 0 10px rgba(76,201,111,.9); animation: lamp 2.2s ease-in-out infinite; }
@@ -492,7 +494,7 @@ body.skin-soft .sprite.offline .ch { filter: url(#brush) grayscale(.5); }
 </svg>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
-<script src="config.js?v=20261109221441"></script>
+<script src="config.js?v=20261109221903"></script>
 <script>
 (() => {
 'use strict';
@@ -1068,7 +1070,7 @@ function walkerFor(id, room) {
     const W = Math.max(1, room.clientWidth - SPRITE_W), H = Math.max(1, room.clientHeight - SPRITE_H);
     w = { x: hash(id) * W, y: hash(id + 'y') * H, tx: 0, ty: 0, wait: 0.5 + hash(id + 'w') * 2, face: 1, speed: 14 + hash(id + 's') * 10, moving: false };
     const others = [...walkers.values()];
-    for (let i = 0; i < 12 && others.some(o => Math.hypot(o.x - w.x, o.y - w.y) < MIN_GAP); i++) { w.x = hash(id + 'x' + i) * W; w.y = hash(id + 'y' + i) * H; }
+    for (let i = 0; i < 12 && others.some(o => Math.hypot(o.x - w.x, (o.y - w.y) * 0.65) < MIN_GAP); i++) { w.x = hash(id + 'x' + i) * W; w.y = hash(id + 'y' + i) * H; }
     w.tx = w.x; w.ty = w.y;
     walkers.set(id, w);
   }
@@ -1087,7 +1089,7 @@ function newTarget(w, W, H, others) {
     const d = Math.hypot(tx - w.x, ty - w.y);
     if (d < 60) continue;
     if (inNoGo(tx, ty)) continue;
-    if (others.some(o => Math.hypot(o.x - tx, o.y - ty) < MIN_GAP)) continue;
+    if (others.some(o => Math.hypot(o.x - tx, (o.y - ty) * 0.65) < MIN_GAP)) continue;
     w.tx = tx; w.ty = ty; return;
   }
   w.tx = Math.random() * W; w.ty = Math.random() * H;
@@ -1123,7 +1125,7 @@ function step(ts) {
     if (canWalk) {
       for (const o of all) {
         if (o === w) continue;
-        const dx = w.x - o.x, dy = w.y - o.y, d = Math.hypot(dx, dy) || 0.01;
+        const dx = w.x - o.x, dy = w.y - o.y, d = Math.hypot(dx, dy * 0.65) || 0.01;
         if (d < MIN_GAP) {
           const push = (MIN_GAP - d) * 0.12;
           w.x = Math.min(W, Math.max(0, w.x + dx / d * push));
@@ -1286,7 +1288,7 @@ function renderRoom() {
   const sprites = list.map(([id, r, here]) => {
     const mine = id === S.me;
     const st = r.status || 'idle';
-    return `<div class="sprite ${st === 'reading' ? 'reading' : ''} ${here ? 'online' : 'offline'}" data-uid="${esc(id)}">
+    return `<div class="sprite ${mine ? 'me' : ''} ${st === 'reading' ? 'reading' : ''} ${here ? 'online' : 'offline'}" data-uid="${esc(id)}">
       ${here ? `<span class="lamp" title="접속 중" aria-label="접속 중"></span>` : ''}
       ${mine && st === 'idle' && !guideDone() ? `<button type="button" class="guide" id="guide">📕를 탭하면 읽기 시작!<br><small>다 읽으면 📖를 한 번 더</small></button>` : ''}
       ${mine && st === 'reading' && S.alive.ask ? `<button type="button" class="guide alive" id="alive-yes">아직 읽고 있나요?<br><small>탭하면 계속 · 10분 뒤 잠시 멈춰요</small></button>` : ''}
