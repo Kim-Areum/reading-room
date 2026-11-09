@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#fcfbf8">
-<script>window.APP_VERSION = "20261107220211";</script>
+<script>window.APP_VERSION = "20261109215411";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -109,6 +109,17 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .tl-title { font-size: 18px; line-height: 1.25; overflow-wrap: anywhere; }
 .tl-title.un { color: var(--ink-soft); }
 .tl-note { font-size: 16px; line-height: 1.35; margin-top: 3px; overflow-wrap: anywhere; }
+.tl-link { display: block; flex: none; }
+.tl-title a { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--line); }
+.tl-title a:hover { border-bottom-color: var(--accent-deep); }
+.tl-title .ext { font-size: 11px; color: var(--ink-soft); margin-left: 3px; vertical-align: top; }
+.tl-foot { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.tl-foot .like { display: inline-flex; align-items: center; gap: 4px; background: var(--paper); border: 1.5px solid var(--line); border-radius: 999px; padding: 2px 9px 2px 7px; color: var(--ink-soft); font-size: 14px; line-height: 1.2; }
+.tl-foot .like svg { width: 16px; height: 16px; }
+.tl-foot .like.on { border-color: var(--accent-deep); color: var(--accent-deep); }
+.tl-foot .like.on svg { fill: var(--accent); }
+.tl-foot .like:disabled { opacity: 1; }
+.tl-foot .likers { font-size: 13px; color: var(--ink-soft); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tl-card .x { position: absolute; top: 6px; right: 8px; background: none; border: 0; color: var(--ink-soft); font-size: 16px; line-height: 1; padding: 2px 4px; }
 .tl-card .x:hover { color: var(--accent-deep); }
 .tl-card .edit { position: absolute; top: 6px; right: 30px; background: none; border: 0; color: var(--ink-soft); padding: 3px 4px; line-height: 1; }
@@ -270,12 +281,22 @@ body.skin-soft .sprite.offline .ch { filter: url(#brush) grayscale(.5); }
 .sh-head .n { font-size: 17px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sh-head .n small { font-size: 11px; color: var(--ink-soft); margin-left: 3px; }
 .sh-head .tot { font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
-.shelf { --wood: #e6d3b3; --wood-d: #c9ab84; --wood-back: #faf5ec; display: flex; flex-wrap: wrap; align-content: flex-start; align-items: flex-start; gap: 12px 5px; padding: 6px 7px 8px; min-height: 58px; max-height: 198px; overflow: hidden; box-sizing: content-box;
-  border-left: 7px solid var(--wood-d); border-right: 7px solid var(--wood-d); border-top: 5px solid var(--wood-d); border-radius: 4px;
-  background: repeating-linear-gradient(to bottom, transparent 0, transparent 58px, var(--wood) 58px, var(--wood) 63px, var(--wood-d) 63px, var(--wood-d) 66px, transparent 66px, transparent 70px) var(--wood-back);
-  background-size: 100% 70px; background-repeat: repeat-y; background-origin: padding-box; background-position: 0 6px; background-clip: padding-box; }   /* planks span post to post; the 6px offset is the top padding */
+.shelf { --oak: #d7b27a; --oak-l: #e7cb98; --oak-d: #b08651; --oak-x: #8f6a3a; --back: #f3e6cd; --grain: rgba(104, 66, 22, .13);
+  display: flex; flex-wrap: wrap; align-content: flex-start; align-items: flex-start; gap: 12px 5px; padding: 7px 10px 9px; min-height: 58px; max-height: 198px; overflow: hidden; box-sizing: content-box; border-radius: 5px;
+  background:
+    /* side posts with vertical grain */
+    linear-gradient(90deg, var(--oak-x) 0 1px, var(--oak) 1px 3px, var(--oak-d) 3px 4px, var(--oak-l) 4px 6px, var(--oak) 6px 8px, var(--oak-d) 8px 9px, var(--oak-x) 9px 10px) left top / 10px 100% no-repeat,
+    linear-gradient(90deg, var(--oak-x) 0 1px, var(--oak-d) 1px 2px, var(--oak) 2px 4px, var(--oak-l) 4px 6px, var(--oak-d) 6px 7px, var(--oak) 7px 9px, var(--oak-x) 9px 10px) right top / 10px 100% no-repeat,
+    /* top board */
+    linear-gradient(var(--oak-l), var(--oak) 60%, var(--oak-d)) left top / 100% 7px no-repeat,
+    /* shelf planks: lit top face with streaks, darker front edge */
+    repeating-linear-gradient(to bottom, transparent 0 58px, var(--oak-l) 58px 60px, var(--oak) 60px 61px, var(--oak-l) 61px 63px, var(--oak-d) 63px 65px, var(--oak-x) 65px 66px, transparent 66px 70px) 0 7px / 100% 70px repeat-y,
+    /* back panel: faint vertical grain over light oak */
+    repeating-linear-gradient(90deg, var(--grain) 0 1px, transparent 1px 7px, var(--grain) 7px 8px, transparent 8px 17px) left top / auto auto repeat,
+    var(--back);
+  background-clip: padding-box; }
 .shelf-card { padding-bottom: 10px; }
-.bk { height: 58px; padding: 0; border: 0; background: none; display: block; flex: none; }
+.bk { height: 58px; padding: 0; border: 0; background: none; display: block; flex: none; filter: drop-shadow(0 1px 0 rgba(90, 60, 20, .25)); }
 .bk img { height: 58px; width: 40px; box-sizing: border-box; object-fit: cover; display: block; border: 1.5px solid var(--ink); border-radius: 2px 4px 4px 2px; background: var(--paper); }
 .bk .spine { display: flex; align-items: center; justify-content: center; height: 58px; width: 20px; border: 1.5px solid var(--ink); border-radius: 3px; background: var(--accent); writing-mode: vertical-rl; font-size: 11px; line-height: 1; padding: 3px 0; overflow: hidden; color: var(--accent-ink); box-sizing: border-box; }
 .bk .spine span { max-height: 50px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -465,7 +486,7 @@ body.skin-soft .sprite.offline .ch { filter: url(#brush) grayscale(.5); }
 </svg>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
-<script src="config.js?v=20261107220211"></script>
+<script src="config.js?v=20261109215411"></script>
 <script>
 (() => {
 'use strict';
@@ -506,6 +527,7 @@ const ICON = {
   log: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M5 20V5h3v15M10 20V8h3v12M15 20l2.5-11 3 .7L18 20"/></svg>',
   share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4"/><path d="M8 8l4-4 4 4"/><path d="M5 13v6h14v-6"/></svg>',
   edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M13.5 8.5l3 3"/></svg>',
+  heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-7.5-4.6-7.5-10A4.2 4.2 0 0 1 12 8a4.2 4.2 0 0 1 7.5 2.5c0 5.4-7.5 10-7.5 10z"/></svg>',
   rooms: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
   chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>',
   send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
@@ -529,6 +551,7 @@ const S = {
   installTip: null,       // 'ios' | 'android' when we should suggest adding to the home screen
   installPrompt: null,    // Android's deferred beforeinstallprompt event
   pushBusy: false, pushErr: '',
+  likes: new Map(),       // session id -> Set of reader ids who liked it
   confirmDel: null,      // session id awaiting delete confirmation
   editNote: null,        // session id being edited (title + memo)
   editTitle: '', editNoteText: '', editCover: null, editHits: [], editSearching: false,   // editCover null = untouched
@@ -635,13 +658,23 @@ function makeSupabaseStore(sb, uid, roomId) {
   async function loadSessions() {
     const { data, error } = await sb.from('rr_sessions').select('*').eq('room_id', roomId).order('ended_at', { ascending: false }).limit(2000);
     if (error) { console.error(error); return; }
-    sessionsCache = data.map(r => ({ id: r.id, readerId: r.reader_id, startedAt: r.started_at, endedAt: r.ended_at, seconds: r.seconds, title: r.title || '', note: r.note || '', coverUrl: r.cover_url || '' }));
+    sessionsCache = data.map(r => ({ id: r.id, readerId: r.reader_id, startedAt: r.started_at, endedAt: r.ended_at, seconds: r.seconds, title: r.title || '', note: r.note || '', coverUrl: r.cover_url || '', isbn: r.isbn || '' }));
     for (const [id, cb] of sessCbs) cb(sessionsCache.filter(x => x.readerId === id));
+    loadLikes();
+  }
+  let likesCache = new Map(), likesCb = null;
+  async function loadLikes() {
+    const { data, error } = await sb.from('rr_likes').select('session_id, reader_id').eq('room_id', roomId);
+    if (error) { console.error(error); return; }
+    const m = new Map();
+    for (const l of data || []) { if (!m.has(l.session_id)) m.set(l.session_id, new Set()); m.get(l.session_id).add(l.reader_id); }
+    likesCache = m; if (likesCb) likesCb(likesCache);
   }
   // live updates: realtime when enabled on the tables, plus a slow poll as a fallback
   sb.channel('rr-changes-' + roomId)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'rr_readers' }, () => loadReaders())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'rr_sessions' }, () => loadSessions())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'rr_likes' }, () => loadLikes())
     .subscribe();
   setInterval(() => { loadReaders(); loadSessions(); }, 20000);
   return {
@@ -649,6 +682,11 @@ function makeSupabaseStore(sb, uid, roomId) {
     me: rid,
     async readerExists(uidCode) { const { data, error } = await sb.from('rr_readers').select('id').like('id', '%:' + uidCode).limit(1); if (error) throw error; return !!(data && data.length); },
     subscribeReaders(cb) { readerCbs.push(cb); loadReaders(); return () => {}; },
+    subscribeLikes(cb) { likesCb = cb; cb(likesCache); loadLikes(); return () => { likesCb = null; }; },
+    async setLike(sessionId, on) {
+      const q = on ? sb.from('rr_likes').upsert({ session_id: sessionId, reader_id: rid, room_id: roomId }) : sb.from('rr_likes').delete().eq('session_id', sessionId).eq('reader_id', rid);
+      const { error } = await q; if (error) throw error; await loadLikes();
+    },
     subscribeSessions(id, cb) { sessCbs.set(id, cb); cb(sessionsCache.filter(x => x.readerId === id)); if (sessCbs.size === 1) loadSessions(); return () => sessCbs.delete(id); },
     async setReader(d) {
       const { error } = await sb.from('rr_readers').upsert({ id: rid, room_id: roomId, animal: d.animal, nickname: d.nickname, status: d.status, started_at: d.startedAt, accum: d.accum, session_started_at: d.sessionStartedAt, updated_at: d.updatedAt });
@@ -662,7 +700,7 @@ function makeSupabaseStore(sb, uid, roomId) {
       if (error) throw error; await loadReaders();
     },
     async addSession(d) {
-      const { error } = await sb.from('rr_sessions').insert({ reader_id: rid, room_id: roomId, started_at: d.startedAt, ended_at: d.endedAt, seconds: d.seconds, title: d.title, note: d.note, cover_url: d.coverUrl || null });
+      const { error } = await sb.from('rr_sessions').insert({ reader_id: rid, room_id: roomId, started_at: d.startedAt, ended_at: d.endedAt, seconds: d.seconds, title: d.title, note: d.note, cover_url: d.coverUrl || null, isbn: d.isbn || null });
       if (error) throw error; await loadSessions();
     },
     async deleteSession(id) {
@@ -671,7 +709,7 @@ function makeSupabaseStore(sb, uid, roomId) {
       await loadSessions();
     },
     async updateSession(id, patch) {
-      const { error } = await sb.from('rr_sessions').update({ title: patch.title, note: patch.note, cover_url: patch.coverUrl || null }).eq('id', id).eq('reader_id', rid);
+      const { error } = await sb.from('rr_sessions').update({ title: patch.title, note: patch.note, cover_url: patch.coverUrl || null, isbn: patch.isbn || null }).eq('id', id).eq('reader_id', rid);
       if (error) throw error;
       await loadSessions();
     },
@@ -688,6 +726,8 @@ function makeLocalStore() {
   return {
     kind: 'local',
     subscribeReaders(cb) { readerCb = cb; setTimeout(pushR, 0); return () => { readerCb = null; }; },
+    subscribeLikes(cb) { cb(new Map()); return () => {}; },
+    async setLike() {},
     subscribeSessions(id, cb) { sessCb = cb; setTimeout(pushS, 0); return () => { sessCb = null; }; },
     async setReader(d) { data.reader = d; save(); pushR(); },
     async updateReader(p) { data.reader = { ...(data.reader || {}), ...p }; save(); pushR(); },
@@ -744,6 +784,7 @@ async function boot() {
   }
 
   const loadTimer = setTimeout(() => { if (S.phase === 'loading') { S.phase = 'setup'; S.storeNote = '아직 서버와 연결되지 않았어요. 잠시 후 다시 열어주세요.'; render(); } }, 10000);
+  if (store.subscribeLikes) store.subscribeLikes(m => { S.likes = m; if (S.phase === 'app' && S.tab === 'log') render(); });
   store.subscribeReaders(list => {
     clearTimeout(loadTimer);
     S.readers = new Map(list);
@@ -882,7 +923,7 @@ function stopReading() {
   const r = myReader(); if (!r || r.status === 'idle') return;
   const now = Date.now();
   const ms = elapsedOf(r, now);
-  S.modal = { seconds: Math.max(1, Math.round(ms / 1000)), startedAt: r.sessionStartedAt || (now - ms), endedAt: now, title: '', note: '', cover: '', hits: [], searching: false, err: '', saving: false };
+  S.modal = { seconds: Math.max(1, Math.round(ms / 1000)), startedAt: r.sessionStartedAt || (now - ms), endedAt: now, title: '', note: '', cover: '', isbn: '', hits: [], searching: false, err: '', saving: false };
   act(() => store.updateReader({ status: 'paused', accum: ms, startedAt: null, updatedAt: now }));
   render();
 }
@@ -894,7 +935,7 @@ function finishSession() {
   m.saving = true; m.err = ''; render();
   act(async () => {
     try {
-      await store.addSession({ startedAt: m.startedAt, endedAt: m.endedAt, seconds: m.seconds, title, note, coverUrl: m.cover || '' });
+      await store.addSession({ startedAt: m.startedAt, endedAt: m.endedAt, seconds: m.seconds, title, note, coverUrl: m.cover || '', isbn: m.isbn || '' });
       await store.updateReader({ status: 'idle', accum: 0, startedAt: null, sessionStartedAt: null, updatedAt: Date.now() });
       S.modal = null;
       render();
@@ -915,11 +956,12 @@ function saveNote(id) {
   const title = ($('#title-edit')?.value || '').trim() || mine.title;
   // cover: a picked search result wins; a changed title without a pick drops the old cover
   const coverUrl = S.editCover !== null ? S.editCover : (title === mine.title ? mine.coverUrl : '');
-  S.editNote = null; S.editHits = []; S.editCover = null; searchSeq++;
+  const isbn = S.editCover !== null ? (S.editIsbn || '') : (title === mine.title ? (mine.isbn || '') : '');
+  S.editNote = null; S.editHits = []; S.editCover = null; S.editIsbn = ''; searchSeq++;
   if (note === (mine.note || '') && title === mine.title && coverUrl === (mine.coverUrl || '')) { render(); return; }
-  mine.note = note; mine.title = title; mine.coverUrl = coverUrl;  // show it right away; the reload below confirms it
+  mine.note = note; mine.title = title; mine.coverUrl = coverUrl; mine.isbn = isbn;  // show it right away; the reload below confirms it
   act(async () => {
-    await store.updateSession(id, { title, note, coverUrl });
+    await store.updateSession(id, { title, note, coverUrl, isbn });
     render();
   });
 }
@@ -928,7 +970,7 @@ function renderEditSuggest() {
   w.innerHTML = suggestHtml({ hits: S.editHits, searching: S.editSearching });
   w.querySelectorAll('[data-hit]').forEach(b => b.addEventListener('click', () => {
     const h = S.editHits[+b.dataset.hit]; if (!h) return;
-    S.editTitle = h.title; S.editCover = h.thumbnail || ''; S.editHits = []; S.editSearching = false;
+    S.editTitle = h.title; S.editCover = h.thumbnail || ''; S.editIsbn = h.isbn || ''; S.editHits = []; S.editSearching = false;
     const ti = $('#title-edit'); if (ti) ti.value = h.title;
     const card = w.closest('.tl-card'), c = card && card.querySelector('.tl-cover');
     if (c && S.editCover) { const img = document.createElement('img'); img.className = 'tl-cover'; img.alt = ''; img.src = S.editCover; c.replaceWith(img); }
@@ -1112,6 +1154,24 @@ function renderRooms() {
     <p class="hint">방을 누르면 들어가요. 연필로 이름을 바꾸고, 공유 버튼으로 초대 링크를 보내요.</p>
   </section>`;
 }
+// Naver book search: by ISBN when we have one (exact book), else by title.
+function bookLink(sess) { return 'https://search.naver.com/search.naver?where=book&query=' + encodeURIComponent(sess.isbn || sess.title || ''); }
+// Heart under a record: friends can like it; on my own records I just see who liked.
+function likeHtml(sess, mine) {
+  const set = S.likes.get(sess.id) || new Set();
+  const liked = set.has(S.me), n = set.size;
+  const names = [...set].filter(id => id !== S.me).map(id => S.readers.get(id)?.nickname || '친구');
+  if (liked) names.unshift('나');
+  if (mine && !n) return '';
+  return `<div class="tl-foot"><button type="button" class="like ${liked ? 'on' : ''}" data-like="${esc(sess.id)}" ${mine ? 'disabled' : ''} aria-pressed="${liked}" aria-label="좋아요">${ICON.heart}${n ? `<span>${n}</span>` : ''}</button>${n ? `<small class="likers">${esc(names.slice(0, 3).join(', '))}${n > 3 ? ' 외 ' + (n - 3) + '명' : ''}</small>` : ''}</div>`;
+}
+function toggleLike(id) {
+  const set = new Set(S.likes.get(id) || []);
+  const on = !set.has(S.me);
+  if (on) set.add(S.me); else set.delete(S.me);
+  S.likes.set(id, set); render();   // optimistic; the store reload confirms it
+  act(async () => { await store.setLike(id, on); });
+}
 function renderPerson() {
   const id = S.person, r = S.readers.get(id), list = S.sessions.get(id) || [];
   const mine = id === S.me;
@@ -1123,9 +1183,9 @@ function renderPerson() {
       return `<li class="tl">
         <div class="tl-date">${fmtWhen(sess.endedAt)}</div>
         <div class="tl-card ${mine ? 'mine' : ''}">
-          ${sess.coverUrl ? `<img class="tl-cover" src="${esc(sess.coverUrl)}" alt="">` : `<span class="tl-cover none"></span>`}
+          ${sess.title ? `<a class="tl-link" href="${esc(bookLink(sess))}" target="_blank" rel="noopener" title="책 정보 보기">` : ''}${sess.coverUrl ? `<img class="tl-cover" src="${esc(sess.coverUrl)}" alt="">` : `<span class="tl-cover none"></span>`}${sess.title ? '</a>' : ''}
           <div class="tl-body">${editing ? `<div class="tl-edit"><input id="title-edit" maxlength="80" value="${esc(S.editTitle)}" placeholder="책 제목" autocomplete="off"><div class="suggest-wrap edit-suggest"></div><textarea id="note-edit" maxlength="300" rows="2" placeholder="한 줄 소감">${esc(S.editNoteText)}</textarea><div class="cf"><button type="button" class="yes" id="note-save">저장</button><button type="button" id="note-cancel">취소</button></div></div>`
-              : `<div class="tl-title ${sess.title ? '' : 'un'}">${sess.title ? esc(sess.title) : '제목 없음'}</div>${sess.note ? `<div class="tl-note">${esc(sess.note)}</div>` : ''}`}
+              : `<div class="tl-title ${sess.title ? '' : 'un'}">${sess.title ? `<a href="${esc(bookLink(sess))}" target="_blank" rel="noopener" title="책 정보 보기">${esc(sess.title)}<span class="ext">↗</span></a>` : '제목 없음'}</div>${sess.note ? `<div class="tl-note">${esc(sess.note)}</div>` : ''}${likeHtml(sess, mine)}`}
             ${confirming ? `<div class="cf">이 기록을 지울까요? <button type="button" class="yes" data-del-yes="${esc(sess.id)}">네</button><button type="button" data-del-no="1">아니오</button></div>` : ''}</div>
           ${mine && !confirming && !editing ? `<button type="button" class="edit" data-edit-note="${esc(sess.id)}" title="메모 고치기" aria-label="메모 고치기">${ICON.edit}</button><button type="button" class="x" data-del="${esc(sess.id)}" aria-label="이 기록 지우기">×</button>` : ''}
         </div>
@@ -1250,7 +1310,7 @@ function recentTitles() {
   for (const sess of S.sessions.get(S.me) || []) {
     const t = (sess.title || '').trim(); const k = t.toLowerCase();
     if (!t || seen.has(k)) continue;
-    seen.add(k); out.push({ title: t, cover: sess.coverUrl || '' });
+    seen.add(k); out.push({ title: t, cover: sess.coverUrl || '', isbn: sess.isbn || '' });
     if (out.length >= 8) break;
   }
   return out;
@@ -1295,7 +1355,7 @@ document.addEventListener('compositionstart', () => { S.composing = true; });
 document.addEventListener('compositionend', () => { S.composing = false; if (S.renderPending) { S.renderPending = false; render(); } });
 function pickHit(i) {
   const m = S.modal; const h = m && m.hits[i]; if (!h) return;
-  m.title = h.title; m.cover = h.thumbnail || ''; m.hits = []; m.searching = false; m.err = '';
+  m.title = h.title; m.cover = h.thumbnail || ''; m.isbn = h.isbn || ''; m.hits = []; m.searching = false; m.err = '';
   const ti = $('#s-title'); if (ti) ti.value = h.title;
   render(); setTimeout(() => $('#s-note')?.focus(), 30);
 }
@@ -1308,7 +1368,7 @@ function renderModal() {
       <div class="field"><label for="s-title">책 제목 <i>*</i></label>
         <div class="title-row">${m.cover ? `<img class="cover-sm" src="${esc(m.cover)}" alt="">` : ''}<input id="s-title" maxlength="80" placeholder="제목을 적으면 표지를 찾아줘요" value="${esc(m.title)}" required autocomplete="off"></div>
         <div class="suggest-wrap">${suggestHtml(m)}</div>
-        ${recentTitles().length ? `<div class="chips" aria-label="전에 적은 제목">${recentTitles().map(t => `<button type="button" class="chip ${m.title.trim() === t.title ? 'on' : ''}" data-title="${esc(t.title)}" data-cover="${esc(t.cover)}">${esc(t.title)}</button>`).join('')}</div>` : ''}
+        ${recentTitles().length ? `<div class="chips" aria-label="전에 적은 제목">${recentTitles().map(t => `<button type="button" class="chip ${m.title.trim() === t.title ? 'on' : ''}" data-title="${esc(t.title)}" data-cover="${esc(t.cover)}" data-isbn="${esc(t.isbn || '')}">${esc(t.title)}</button>`).join('')}</div>` : ''}
       </div>
       <div class="field"><label for="s-note">한 줄 소감 <span style="color:var(--ink-soft)">(건너뛰어도 돼요)</span></label><textarea id="s-note" maxlength="300" placeholder="오늘 읽으면서 든 생각 한 줄">${esc(m.note)}</textarea></div>
       ${m.err ? `<div class="err">${esc(m.err)}</div>` : ''}
@@ -1368,11 +1428,12 @@ function bind() {
   $('#finish-form')?.addEventListener('submit', e => { e.preventDefault(); finishSession(); });
   $('#finish-cancel')?.addEventListener('click', cancelStop);
   $('#finish-discard')?.addEventListener('click', discardSession);
-  app.querySelectorAll('[data-title]').forEach(b => b.addEventListener('click', () => { if (!S.modal) return; S.modal.title = b.dataset.title; S.modal.cover = b.dataset.cover || ''; S.modal.hits = []; S.modal.err = ''; const ti = $('#s-title'); if (ti) ti.value = b.dataset.title; render(); setTimeout(() => $('#s-note')?.focus(), 30); }));
-  $('#s-title')?.addEventListener('input', e => { if (S.modal) { S.modal.title = e.target.value; S.modal.cover = ''; if (S.modal.err && e.target.value.trim()) { S.modal.err = ''; $('.sheet .err')?.remove(); } searchBooks(e.target.value); } });
+  app.querySelectorAll('[data-title]').forEach(b => b.addEventListener('click', () => { if (!S.modal) return; S.modal.title = b.dataset.title; S.modal.cover = b.dataset.cover || ''; S.modal.isbn = b.dataset.isbn || ''; S.modal.hits = []; S.modal.err = ''; const ti = $('#s-title'); if (ti) ti.value = b.dataset.title; render(); setTimeout(() => $('#s-note')?.focus(), 30); }));
+  $('#s-title')?.addEventListener('input', e => { if (S.modal) { S.modal.title = e.target.value; S.modal.cover = ''; S.modal.isbn = ''; if (S.modal.err && e.target.value.trim()) { S.modal.err = ''; $('.sheet .err')?.remove(); } searchBooks(e.target.value); } });
   app.querySelectorAll('[data-hit]').forEach(b => b.addEventListener('click', () => pickHit(+b.dataset.hit)));
   $('#s-note')?.addEventListener('input', e => { if (S.modal) S.modal.note = e.target.value; });
   app.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => { S.confirmDel = b.dataset.del; S.editNote = null; render(); }));
+  app.querySelectorAll('[data-like]:not([disabled])').forEach(b => b.addEventListener('click', () => toggleLike(b.dataset.like)));
   app.querySelectorAll('[data-edit-note]').forEach(b => b.addEventListener('click', () => { const sess = (S.sessions.get(S.me) || []).find(x => x.id === b.dataset.editNote); if (!sess) return; S.editNote = sess.id; S.editTitle = sess.title || ''; S.editNoteText = sess.note || ''; S.editCover = null; S.editHits = []; S.editSearching = false; S.confirmDel = null; render(); setTimeout(() => { const t = $('#note-edit'); if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }, 30); }));
   $('#title-edit')?.addEventListener('input', e => { S.editTitle = e.target.value; S.editCover = null; editSearch(e.target.value); });
   $('#title-edit')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('#note-edit')?.focus(); } });
