@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#fcfbf8">
-<script>window.APP_VERSION = "20261109220156";</script>
+<script>window.APP_VERSION = "20261109221441";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -492,7 +492,7 @@ body.skin-soft .sprite.offline .ch { filter: url(#brush) grayscale(.5); }
 </svg>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
-<script src="config.js?v=20261109220156"></script>
+<script src="config.js?v=20261109221441"></script>
 <script>
 (() => {
 'use strict';
@@ -833,11 +833,17 @@ function ensureSessionSub(id) {
 
 // ---------- actions ----------
 let busy = false;
+let busySince = 0;
 async function act(fn) {
-  if (busy) return;
-  busy = true;
-  try { await fn(); }
-  catch (e) { console.error(e); S.storeNote = '저장하지 못했어요. 이 링크에 쓰기 권한(편집자)이 있는지 확인해 주세요.'; render(); }
+  if (busy && Date.now() - busySince < 8000) return;   // a request that never answered must not lock the app for good
+  busy = true; busySince = Date.now();
+  const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000));
+  try { await Promise.race([fn(), timeout]); if (S.storeNote && S.storeNote.startsWith('서버 응답')) { S.storeNote = ''; render(); } }
+  catch (e) {
+    console.error(e);
+    S.storeNote = e && e.message === 'timeout' ? '서버 응답이 늦어요. 잠시 후 다시 눌러 주세요.' : '저장하지 못했어요. 이 링크에 쓰기 권한(편집자)이 있는지 확인해 주세요.';
+    render();
+  }
   finally { busy = false; }
 }
 function myReader() { return S.readers.get(S.me); }
@@ -1135,7 +1141,11 @@ function step(ts) {
 // ---------- render ----------
 function render() {
   const app = $('#app');
-  if (S.composing) { S.renderPending = true; return; }
+  if (S.composing) {
+    const a = document.activeElement, editing = a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA') && document.contains(a) && Date.now() - (S.composingAt || 0) < 4000;
+    if (editing) { S.renderPending = true; clearTimeout(S.renderTimer); S.renderTimer = setTimeout(() => { if (S.renderPending) { S.composing = false; S.renderPending = false; render(); } }, 1200); return; }
+    S.composing = false;   // stale flag (field went away without compositionend): draw now
+  }
   const active = document.activeElement;
   const keep = active && active.id && app.contains(active) && 'value' in active
     ? { id: active.id, value: active.value, s: active.selectionStart, e: active.selectionEnd } : null;
@@ -1391,8 +1401,11 @@ function searchBooks(q) {
   fetchHits(q, () => { if (S.modal) { S.modal.searching = true; renderSuggest(); } }, hits => { if (S.modal) { S.modal.hits = hits; S.modal.searching = false; renderSuggest(); } });
 }
 // Any other render (friend status, poll) waits until the IME composition ends.
-document.addEventListener('compositionstart', () => { S.composing = true; });
-document.addEventListener('compositionend', () => { S.composing = false; if (S.renderPending) { S.renderPending = false; render(); } });
+document.addEventListener('compositionstart', () => { S.composing = true; S.composingAt = Date.now(); });
+function endComposing() { if (!S.composing && !S.renderPending) return; S.composing = false; clearTimeout(S.renderTimer); if (S.renderPending) { S.renderPending = false; render(); } }
+document.addEventListener('compositionend', endComposing);
+document.addEventListener('focusout', () => setTimeout(endComposing, 0), true);
+document.addEventListener('pointerdown', e => { if (S.composing && !(e.target && e.target.closest && e.target.closest('input, textarea'))) endComposing(); }, true);
 function pickHit(i) {
   const m = S.modal; const h = m && m.hits[i]; if (!h) return;
   m.title = h.title; m.cover = h.thumbnail || ''; m.isbn = h.isbn || ''; m.hits = []; m.searching = false; m.err = '';
