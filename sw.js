@@ -1,5 +1,5 @@
 // 같이 읽는 방 — service worker: the app shell loads instantly (and offline); live data always goes to the network.
-const VERSION = '20261109221903';
+const VERSION = '20261109222544';
 const CACHE = 'rr-' + VERSION;
 const SHELL = ['./', './index.html', './config.js', './manifest.webmanifest', './fonts/Ownglyph_PDH.ttf', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 const LIVE = /supabase\.co|vercel\.app|kakaocdn\.net|daumcdn\.net|version\.txt/;

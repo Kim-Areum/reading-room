@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#fcfbf8">
-<script>window.APP_VERSION = "20261109221903";</script>
+<script>window.APP_VERSION = "20261109222544";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -494,7 +494,7 @@ body.skin-soft .sprite.offline .ch { filter: url(#brush) grayscale(.5); }
 </svg>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
-<script src="config.js?v=20261109221903"></script>
+<script src="config.js?v=20261109222544"></script>
 <script>
 (() => {
 'use strict';
@@ -615,7 +615,7 @@ async function joinRoom() {
 const sessionSubs = new Map();
 const walkers = new Map();
 const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const SPRITE_W = 110, SPRITE_H = 170, MIN_GAP = 140;
+const SPRITE_W = 110, SPRITE_H = 200, MIN_GAP = 122, GAP_Y = 0.6;   // ≥122px apart sideways, ≥203px when stacked   // vertical distance counts for less: sprites are tall
 const BOOK_API = 'https://hanjul-khaki.vercel.app/api/public/books';
 
 S.tab = 'now';  // a room always opens on the home tab
@@ -1068,28 +1068,31 @@ function walkerFor(id, room) {
   let w = walkers.get(id);
   if (!w) {
     const W = Math.max(1, room.clientWidth - SPRITE_W), H = Math.max(1, room.clientHeight - SPRITE_H);
-    w = { x: hash(id) * W, y: hash(id + 'y') * H, tx: 0, ty: 0, wait: 0.5 + hash(id + 'w') * 2, face: 1, speed: 14 + hash(id + 's') * 10, moving: false };
+    w = { id, x: hash(id) * W, y: hash(id + 'y') * H, tx: 0, ty: 0, wait: 0.5 + hash(id + 'w') * 2, face: 1, speed: 14 + hash(id + 's') * 10, moving: false };
     const others = [...walkers.values()];
-    for (let i = 0; i < 12 && others.some(o => Math.hypot(o.x - w.x, (o.y - w.y) * 0.65) < MIN_GAP); i++) { w.x = hash(id + 'x' + i) * W; w.y = hash(id + 'y' + i) * H; }
+    for (let i = 0; i < 12 && others.some(o => Math.hypot(o.x - w.x, (o.y - w.y) * GAP_Y) < MIN_GAP); i++) { w.x = hash(id + 'x' + i) * W; w.y = hash(id + 'y' + i) * H; }
     w.tx = w.x; w.ty = w.y;
     walkers.set(id, w);
   }
   return w;
 }
 // The chat box (top right) is a no-go area: walkers neither aim for it nor stay under it.
-let noGo = null;
+let noGo = null, noGoFab = null;
 function updateNoGo(room) {
   const box = room.querySelector('#chat-box');
   noGo = box ? { x1: box.offsetLeft - 6, y1: box.offsetTop - 6, x2: box.offsetLeft + box.offsetWidth + 6, y2: box.offsetTop + box.offsetHeight + 6 } : null;
+  const fab = document.querySelector('.chat-fab');
+  if (fab) { const fr = fab.getBoundingClientRect(), rr = room.getBoundingClientRect(); noGoFab = { x1: fr.left - rr.left - 6, y1: fr.top - rr.top - 6, x2: fr.right - rr.left + 6, y2: fr.bottom - rr.top + 6 }; } else noGoFab = null;
 }
-function inNoGo(x, y) { return !!noGo && x < noGo.x2 && x + SPRITE_W > noGo.x1 && y < noGo.y2 && y + SPRITE_H > noGo.y1; }
+const hits = (z, x, y) => !!z && x < z.x2 && x + SPRITE_W > z.x1 && y < z.y2 && y + SPRITE_H > z.y1;
+function inNoGo(x, y) { return hits(noGo, x, y) || hits(noGoFab, x, y); }
 function newTarget(w, W, H, others) {
   for (let i = 0; i < 12; i++) {
     const tx = Math.random() * W, ty = Math.random() * H;
     const d = Math.hypot(tx - w.x, ty - w.y);
     if (d < 60) continue;
     if (inNoGo(tx, ty)) continue;
-    if (others.some(o => Math.hypot(o.x - tx, (o.y - ty) * 0.65) < MIN_GAP)) continue;
+    if (others.some(o => Math.hypot(o.x - tx, (o.y - ty) * GAP_Y) < MIN_GAP)) continue;
     w.tx = tx; w.ty = ty; return;
   }
   w.tx = Math.random() * W; w.ty = Math.random() * H;
@@ -1121,23 +1124,50 @@ function step(ts) {
         if (Math.abs(dx) > 2) w.face = dx < 0 ? -1 : 1;
       }
     } else { w.tx = w.x; w.ty = w.y; }
-    // keep characters from overlapping: a walker that gets too close to anyone is nudged away
-    if (canWalk) {
-      for (const o of all) {
-        if (o === w) continue;
-        const dx = w.x - o.x, dy = w.y - o.y, d = Math.hypot(dx, dy * 0.65) || 0.01;
-        if (d < MIN_GAP) {
-          const push = (MIN_GAP - d) * 0.12;
-          w.x = Math.min(W, Math.max(0, w.x + dx / d * push));
-          w.y = Math.min(H, Math.max(0, w.y + dy / d * push));
-          if (d < MIN_GAP * 0.6) { w.tx = w.x; w.ty = w.y; w.wait = 0.3; }  // too crowded: pick a new spot soon
-        }
-      }
-    }
+    w.canWalk = canWalk; w.offline = !isHere(id); w.isMe = id === S.me;
+  });
+  // Nobody overlaps: walkers step aside, seated or paused friends drift slowly, offline ones simply jump to a free spot.
+  // My own seated character never moves, so my buttons stay where I left them.
+  const mobility = w => w.isMe && !w.canWalk ? 0 : w.canWalk ? 1 : w.offline ? 3 : 0.25;
+  for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) {
+    const a = all[i], b = all[j];
+    const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy * GAP_Y) || 0.01;
+    if (d >= MIN_GAP) continue;
+    const ma = mobility(a), mb = mobility(b);
+    if (!ma && !mb) continue;
+    const over = MIN_GAP - d, ux = (dx || 0.01) / d, uy = dy * GAP_Y / d;
+    const move = (w, m, sign) => {
+      if (!m) return;
+      if (m === 3) { relocate(w, W, H, all); return; }   // offline: not animated anyway
+      const k = over * 0.12 * (m === 1 ? 1 : 0.35);
+      w.x = Math.min(W, Math.max(0, w.x + ux * k * sign)); w.y = Math.min(H, Math.max(0, w.y + uy * k * sign));
+      if (w.canWalk && d < MIN_GAP * 0.7) { w.tx = w.x; w.ty = w.y; w.wait = 0.3; }   // too crowded: pick a new spot soon
+      if (!w.canWalk) { w.tx = w.x; w.ty = w.y; }
+    };
+    if (ma && mb) { move(a, ma, -1); move(b, mb, 1); } else if (ma) move(a, ma, -1); else move(b, mb, 1);
+  }
+  els.forEach((el, i) => {
+    const w = all[i];
     el.style.transform = `translate(${w.x.toFixed(1)}px, ${w.y.toFixed(1)}px)`;
     el.style.setProperty('--face', w.face);
     el.style.setProperty('--bob', w.moving ? `${(Math.sin(ts / 110) * 1.8).toFixed(2)}px` : '0px');
   });
+}
+// Put a sprite on the nearest free grid slot (so offline characters settle into a tidy layout instead of jumping around).
+function relocate(w, W, H, all) {
+  const cols = Math.max(1, Math.floor(W / MIN_GAP) + 1), rows = Math.max(1, Math.floor(H / (MIN_GAP / GAP_Y)) + 1);
+  let best = null, bestScore = -Infinity, nearest = null, nearestD = Infinity;
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const x = cols > 1 ? c * (W / (cols - 1)) : W / 2, y = rows > 1 ? r * (H / (rows - 1)) : H / 2;
+    if (inNoGo(x, y)) continue;
+    let minD = Infinity;
+    for (const o of all) { if (o === w) continue; minD = Math.min(minD, Math.hypot(o.x - x, (o.y - y) * GAP_Y)); }
+    if (minD > bestScore) { bestScore = minD; best = [x, y]; }
+    const dd = Math.hypot(w.x - x, w.y - y);
+    if (minD >= MIN_GAP && dd < nearestD) { nearestD = dd; nearest = [x, y]; }
+  }
+  const spot = nearest || best; if (!spot) return;
+  w.x = w.tx = spot[0]; w.y = w.ty = spot[1];
 }
 
 // ---------- render ----------
