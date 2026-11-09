@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#fcfbf8">
-<script>window.APP_VERSION = "20261109215411";</script>
+<script>window.APP_VERSION = "20261109220156";</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -342,6 +342,12 @@ body.skin-soft .sprite.offline .ch { filter: url(#brush) grayscale(.5); }
 .sheet .again { text-align: center; margin-top: 10px; }
 .sheet .again button { background: none; border: 0; color: var(--ink-soft); font-size: 15px; text-decoration: underline; }
 .sheet .err { color: var(--accent-deep); font-size: 15px; margin-bottom: 8px; }
+.sheet label .opt { color: var(--ink-soft); font-size: 14px; }
+.log-actions { display: flex; justify-content: flex-end; padding-top: 10px; }
+.log-actions .btn { font-size: 16px; padding: 8px 14px; border-radius: 999px; }
+.sprite .guide.alive { border-color: var(--accent-deep); color: var(--accent-deep); animation: none; }
+.sprite .guide.alive::after { border-color: var(--accent-deep); }
+.sprite .guide.still { animation: none; }
 
 @media (prefers-reduced-motion: reduce) { .sprite.reading .body, .sprite.reading .book, .sprite.reading .dots, .sprite .lamp { animation: none; } }
 </style>
@@ -486,7 +492,7 @@ body.skin-soft .sprite.offline .ch { filter: url(#brush) grayscale(.5); }
 </svg>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
-<script src="config.js?v=20261109215411"></script>
+<script src="config.js?v=20261109220156"></script>
 <script>
 (() => {
 'use strict';
@@ -547,7 +553,8 @@ const S = {
   online: new Set(),
   onlineRaw: new Set(),  // presence keys as the room reports them, registered or not
   roomOk: false,
-  modal: null,            // {seconds, startedAt, endedAt, title, note, file, preview, err, saving}
+  modal: null,            // {mode:'timer'|'record', seconds, startedAt, endedAt, title, note, cover, isbn, hits, err, saving}
+  alive: { ask: false, autoPaused: false },   // long-timer guard: ask '아직 읽고 있나요?' then auto-pause
   installTip: null,       // 'ios' | 'android' when we should suggest adding to the home screen
   installPrompt: null,    // Android's deferred beforeinstallprompt event
   pushBusy: false, pushErr: '',
@@ -792,6 +799,7 @@ async function boot() {
     S.online = computeOnline();
     if (S.phase === 'loading') S.phase = S.readers.has(S.me) ? 'app' : 'setup';
     render();
+    if (S.phase === 'app') checkAlive();
   }, () => { clearTimeout(loadTimer); if (S.phase === 'loading') { S.phase = 'setup'; render(); } });
 
   if (sb) {
@@ -809,6 +817,7 @@ async function boot() {
     }).subscribe(status => { if (status === 'SUBSCRIBED') ch.track({ uid: S.me, at: Date.now() }); });
   }
   setInterval(tick, 1000);
+  setInterval(checkAlive, 30000);
   requestAnimationFrame(step);
 }
 function computeOnline() {
@@ -905,6 +914,7 @@ function pushHtml() {
 }
 function startReading() {
   setGuideDone();
+  S.alive.ask = false; S.alive.autoPaused = false;
   const now = Date.now();
   act(() => store.updateReader({ status: 'reading', startedAt: now, accum: 0, sessionStartedAt: now, updatedAt: now }));
   notifyFriends();
@@ -916,6 +926,7 @@ function pauseReading() {
 }
 function resumeReading() {
   const r = myReader(); if (!r || r.status !== 'paused') return;
+  S.alive.ask = false; S.alive.autoPaused = false;
   const now = Date.now();
   act(() => store.updateReader({ status: 'reading', startedAt: now, updatedAt: now }));
 }
@@ -923,26 +934,51 @@ function stopReading() {
   const r = myReader(); if (!r || r.status === 'idle') return;
   const now = Date.now();
   const ms = elapsedOf(r, now);
-  S.modal = { seconds: Math.max(1, Math.round(ms / 1000)), startedAt: r.sessionStartedAt || (now - ms), endedAt: now, title: '', note: '', cover: '', isbn: '', hits: [], searching: false, err: '', saving: false };
+  S.alive.ask = false; S.alive.autoPaused = false;
+  S.modal = { mode: 'timer', seconds: Math.max(1, Math.round(ms / 1000)), startedAt: r.sessionStartedAt || (now - ms), endedAt: now, title: '', note: '', cover: '', isbn: '', hits: [], searching: false, err: '', saving: false };
   act(() => store.updateReader({ status: 'paused', accum: ms, startedAt: null, updatedAt: now }));
+  render();
+}
+// 타이머 없이 책만 책장에 올리기 (기록 탭)
+function openRecord() {
+  if (!myReader() || S.modal) return;
+  S.modal = { mode: 'record', seconds: 0, startedAt: null, endedAt: Date.now(), title: '', note: '', cover: '', isbn: '', hits: [], searching: false, err: '', saving: false };
   render();
 }
 function finishSession() {
   const m = S.modal; if (!m || m.saving) return;
+  const record = m.mode === 'record';
   const title = ($('#s-title')?.value || m.title || '').trim().slice(0, 80);
-  if (!title) { m.err = '책 제목을 적어 주세요.'; render(); return; }
+  if (record && !title) { m.err = '책 제목을 적어 주세요.'; render(); return; }
   const note = ($('#s-note')?.value || m.note || '').trim().slice(0, 300);
+  if (record && !title) return;
   m.saving = true; m.err = ''; render();
   act(async () => {
     try {
       await store.addSession({ startedAt: m.startedAt, endedAt: m.endedAt, seconds: m.seconds, title, note, coverUrl: m.cover || '', isbn: m.isbn || '' });
-      await store.updateReader({ status: 'idle', accum: 0, startedAt: null, sessionStartedAt: null, updatedAt: Date.now() });
+      if (!record) await store.updateReader({ status: 'idle', accum: 0, startedAt: null, sessionStartedAt: null, updatedAt: Date.now() });
       S.modal = null;
       render();
     } catch (e) { m.saving = false; throw e; }
   });
 }
 function cancelStop() { S.modal = null; render(); }
+// 켜 둔 채 잊은 타이머: 3시간 지나면 묻고, 10분 더 답이 없으면 잠시 멈춘다.
+const ALIVE_LIMIT = 3 * 3600 * 1000, ALIVE_GRACE = 10 * 60 * 1000;
+function aliveKey() { return 'rr.alive:' + (S.me || ''); }
+function aliveUntil(r) { try { const v = JSON.parse(localStorage.getItem(aliveKey()) || 'null'); if (v && v.session === r.sessionStartedAt) return v.until; } catch (e) {} return ALIVE_LIMIT; }
+function confirmAlive() {
+  const r = myReader(); if (!r) return;
+  try { localStorage.setItem(aliveKey(), JSON.stringify({ session: r.sessionStartedAt, until: elapsedOf(r) + ALIVE_LIMIT })); } catch (e) {}
+  S.alive.ask = false; render();
+}
+function checkAlive() {
+  const r = myReader();
+  if (!r || r.status !== 'reading') { if (S.alive.ask) { S.alive.ask = false; render(); } return; }
+  const el = elapsedOf(r), limit = aliveUntil(r);
+  if (el > limit + ALIVE_GRACE) { S.alive.ask = false; S.alive.autoPaused = true; pauseReading(); render(); }
+  else if (el > limit && !S.alive.ask) { S.alive.ask = true; render(); }
+}
 function discardSession() {
   const m = S.modal; if (!m || m.saving) return;
   S.modal = null;
@@ -1185,7 +1221,7 @@ function renderPerson() {
         <div class="tl-card ${mine ? 'mine' : ''}">
           ${sess.title ? `<a class="tl-link" href="${esc(bookLink(sess))}" target="_blank" rel="noopener" title="책 정보 보기">` : ''}${sess.coverUrl ? `<img class="tl-cover" src="${esc(sess.coverUrl)}" alt="">` : `<span class="tl-cover none"></span>`}${sess.title ? '</a>' : ''}
           <div class="tl-body">${editing ? `<div class="tl-edit"><input id="title-edit" maxlength="80" value="${esc(S.editTitle)}" placeholder="책 제목" autocomplete="off"><div class="suggest-wrap edit-suggest"></div><textarea id="note-edit" maxlength="300" rows="2" placeholder="한 줄 소감">${esc(S.editNoteText)}</textarea><div class="cf"><button type="button" class="yes" id="note-save">저장</button><button type="button" id="note-cancel">취소</button></div></div>`
-              : `<div class="tl-title ${sess.title ? '' : 'un'}">${sess.title ? `<a href="${esc(bookLink(sess))}" target="_blank" rel="noopener" title="책 정보 보기">${esc(sess.title)}<span class="ext">↗</span></a>` : '제목 없음'}</div>${sess.note ? `<div class="tl-note">${esc(sess.note)}</div>` : ''}${likeHtml(sess, mine)}`}
+              : `<div class="tl-title ${sess.title ? '' : 'un'}">${sess.title ? `<a href="${esc(bookLink(sess))}" target="_blank" rel="noopener" title="책 정보 보기">${esc(sess.title)}<span class="ext">↗</span></a>` : (sess.seconds ? `제목 없이 ${fmtDur(sess.seconds)} 읽었어요` : '제목 없음')}</div>${sess.note ? `<div class="tl-note">${esc(sess.note)}</div>` : ''}${likeHtml(sess, mine)}`}
             ${confirming ? `<div class="cf">이 기록을 지울까요? <button type="button" class="yes" data-del-yes="${esc(sess.id)}">네</button><button type="button" data-del-no="1">아니오</button></div>` : ''}</div>
           ${mine && !confirming && !editing ? `<button type="button" class="edit" data-edit-note="${esc(sess.id)}" title="메모 고치기" aria-label="메모 고치기">${ICON.edit}</button><button type="button" class="x" data-del="${esc(sess.id)}" aria-label="이 기록 지우기">×</button>` : ''}
         </div>
@@ -1243,6 +1279,8 @@ function renderRoom() {
     return `<div class="sprite ${st === 'reading' ? 'reading' : ''} ${here ? 'online' : 'offline'}" data-uid="${esc(id)}">
       ${here ? `<span class="lamp" title="접속 중" aria-label="접속 중"></span>` : ''}
       ${mine && st === 'idle' && !guideDone() ? `<button type="button" class="guide" id="guide">📕를 탭하면 읽기 시작!<br><small>다 읽으면 📖를 한 번 더</small></button>` : ''}
+      ${mine && st === 'reading' && S.alive.ask ? `<button type="button" class="guide alive" id="alive-yes">아직 읽고 있나요?<br><small>탭하면 계속 · 10분 뒤 잠시 멈춰요</small></button>` : ''}
+      ${mine && st === 'paused' && S.alive.autoPaused ? `<button type="button" class="guide still" id="alive-paused">오래 켜져 있어서 잠시 멈췄어요<br><small>다시 읽으면 '다시', 끝났으면 '끝'</small></button>` : ''}
       <div class="bookwrap">${st === 'reading' ? `<span class="dots" aria-hidden="true">···</span>` : ''}<button class="book ${st !== 'idle' ? 'on' : ''} ${mine ? 'mine' : ''}" data-book="${mine ? '1' : ''}"
         ${mine ? '' : 'tabindex="-1" aria-hidden="true"'} aria-label="${st === 'idle' ? '읽기 시작' : '읽기 종료'}" title="${mine ? (st === 'idle' ? '탭해서 읽기 시작' : '탭해서 읽기 종료') : ''}">${st === 'idle' ? '📕' : '📖'}</button></div>
       <div class="seat">${st !== 'idle' ? CHAIR_BACK : ''}<div class="body">${charSvg(r.animal)}${st !== 'idle' ? glassesSvg(r.animal) : ''}</div>${st !== 'idle' ? CHAIR_FRONT + feetSvg(r.animal) : ''}</div>
@@ -1268,7 +1306,8 @@ function renderRoom() {
 function groupBooks(list) {
   const groups = new Map();
   for (const sess of list) {
-    const key = (sess.title || '').trim().toLowerCase() || '\u0000';
+    if (!(sess.title || '').trim()) continue;   // 제목 없는 시간 기록은 책장에 올리지 않음
+    const key = (sess.title || '').trim().toLowerCase();
     if (!groups.has(key)) groups.set(key, { key, title: (sess.title || '').trim(), items: [], seconds: 0, latest: 0, cover: '' });
     const g = groups.get(key);
     g.items.push(sess); g.seconds += sess.seconds || 0; g.latest = Math.max(g.latest, sess.endedAt || 0);
@@ -1292,8 +1331,9 @@ function bubble(sess, mine, withTitle) {
 }
 function renderLog() {
   const ids = [...S.readers.keys()].sort((a, b) => (a === S.me ? -1 : b === S.me ? 1 : 0));
-  if (!ids.length) return `<div class="empty"><b>아직 기록이 없어요</b>지금 화면에서 읽기를 시작해 보세요.</div>`;
-  return `<section class="shelves">${ids.map(id => {
+  if (!ids.length) return `<div class="empty"><b>아직 기록이 없어요</b>지금 화면에서 읽기를 시작하거나, 읽은 책을 바로 기록해 보세요.</div>`;
+  const addBtn = myReader() ? `<div class="log-actions"><button type="button" class="btn ghost" id="record-open">＋ 책 기록 남기기</button></div>` : '';
+  return `${addBtn}<section class="shelves">${ids.map(id => {
     const r = S.readers.get(id);
     const list = S.sessions.get(id) || [];
     const total = list.reduce((a, s) => a + (s.seconds || 0), 0);
@@ -1360,23 +1400,24 @@ function pickHit(i) {
   render(); setTimeout(() => $('#s-note')?.focus(), 30);
 }
 function renderModal() {
-  const m = S.modal;
+  const m = S.modal, record = m.mode === 'record';
   return `<div class="overlay" id="overlay">
     <form class="sheet" id="finish-form">
-      <h3>잘 읽었어요</h3>
-      <div class="sum">이번에 <b>${fmtClock(m.seconds * 1000)}</b> 읽었어요. 무슨 책이었나요?</div>
-      <div class="field"><label for="s-title">책 제목 <i>*</i></label>
-        <div class="title-row">${m.cover ? `<img class="cover-sm" src="${esc(m.cover)}" alt="">` : ''}<input id="s-title" maxlength="80" placeholder="제목을 적으면 표지를 찾아줘요" value="${esc(m.title)}" required autocomplete="off"></div>
+      ${record ? `<h3>책을 기록해요</h3>
+      <div class="sum">타이머 없이 책장에 바로 올려요. 무슨 책인가요?</div>` : `<h3>잘 읽었어요</h3>
+      <div class="sum">이번에 <b>${fmtClock(m.seconds * 1000)}</b> 읽었어요. 무슨 책이었나요?</div>`}
+      <div class="field"><label for="s-title">책 제목 ${record ? '<i>*</i>' : '<span class="opt">(안 적으면 시간만 남아요)</span>'}</label>
+        <div class="title-row">${m.cover ? `<img class="cover-sm" src="${esc(m.cover)}" alt="">` : ''}<input id="s-title" maxlength="80" placeholder="제목을 적으면 표지를 찾아줘요" value="${esc(m.title)}" ${record ? 'required' : ''} autocomplete="off"></div>
         <div class="suggest-wrap">${suggestHtml(m)}</div>
         ${recentTitles().length ? `<div class="chips" aria-label="전에 적은 제목">${recentTitles().map(t => `<button type="button" class="chip ${m.title.trim() === t.title ? 'on' : ''}" data-title="${esc(t.title)}" data-cover="${esc(t.cover)}" data-isbn="${esc(t.isbn || '')}">${esc(t.title)}</button>`).join('')}</div>` : ''}
       </div>
       <div class="field"><label for="s-note">한 줄 소감 <span style="color:var(--ink-soft)">(건너뛰어도 돼요)</span></label><textarea id="s-note" maxlength="300" placeholder="오늘 읽으면서 든 생각 한 줄">${esc(m.note)}</textarea></div>
       ${m.err ? `<div class="err">${esc(m.err)}</div>` : ''}
       <div class="btn-row">
-        <button type="button" class="btn ghost" id="finish-discard" ${m.saving ? 'disabled' : ''}>기록 없이 닫기</button>
-        <button type="submit" class="btn primary" id="finish-save" ${m.saving ? 'disabled' : ''}>${m.saving ? '저장하는 중…' : '저장'}</button>
+        ${record ? `<button type="button" class="btn ghost" id="finish-cancel" ${m.saving ? 'disabled' : ''}>취소</button>` : `<button type="button" class="btn ghost" id="finish-discard" ${m.saving ? 'disabled' : ''}>기록 없이 닫기</button>`}
+        <button type="submit" class="btn primary" id="finish-save" ${m.saving ? 'disabled' : ''}>${m.saving ? '저장하는 중…' : (record ? '책장에 올리기' : '저장')}</button>
       </div>
-      <div class="again"><button type="button" id="finish-cancel" ${m.saving ? 'disabled' : ''}>아직 다 안 읽었어요, 계속 읽기</button></div>
+      ${record ? '' : `<div class="again"><button type="button" id="finish-cancel" ${m.saving ? 'disabled' : ''}>아직 다 안 읽었어요, 계속 읽기</button></div>`}
     </form>
   </div>`;
 }
@@ -1426,6 +1467,9 @@ function bind() {
   app.querySelectorAll('[data-person]').forEach(c => { const open = () => { S.person = c.dataset.person; S.confirmDel = null; render(); window.scrollTo(0, 0); }; c.addEventListener('click', open); c.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } }); });
   $('#person-back')?.addEventListener('click', () => { S.person = null; S.confirmDel = null; S.editNote = null; render(); });
   $('#finish-form')?.addEventListener('submit', e => { e.preventDefault(); finishSession(); });
+  $('#record-open')?.addEventListener('click', openRecord);
+  $('#alive-yes')?.addEventListener('click', confirmAlive);
+  $('#alive-paused')?.addEventListener('click', () => { S.alive.autoPaused = false; render(); });
   $('#finish-cancel')?.addEventListener('click', cancelStop);
   $('#finish-discard')?.addEventListener('click', discardSession);
   app.querySelectorAll('[data-title]').forEach(b => b.addEventListener('click', () => { if (!S.modal) return; S.modal.title = b.dataset.title; S.modal.cover = b.dataset.cover || ''; S.modal.isbn = b.dataset.isbn || ''; S.modal.hits = []; S.modal.err = ''; const ti = $('#s-title'); if (ti) ti.value = b.dataset.title; render(); setTimeout(() => $('#s-note')?.focus(), 30); }));
